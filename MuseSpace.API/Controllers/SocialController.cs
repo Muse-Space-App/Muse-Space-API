@@ -85,4 +85,23 @@ public class SocialController : ControllerBase
         if (!result.IsSuccess) return NotFound(result);
         return Ok(result);
     }
+
+    /// <summary>
+    /// Toggle the user's commission accepting status
+    /// </summary>
+    [HttpPut("api/users/profile/commissions-status")]
+    [Authorize]
+    [ProducesResponseType(typeof(GenericResult<bool>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ToggleAcceptingCommissions([FromBody] ToggleAcceptingCommissionsRequest request, CancellationToken cancellationToken)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await _socialService.ToggleAcceptingCommissionsAsync(userId, request.IsAcceptingCommissions, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
 }

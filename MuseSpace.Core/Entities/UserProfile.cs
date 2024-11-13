@@ -12,5 +12,6 @@ public sealed class UserProfile : BaseEntity
     public string? SocialLinks { get; set; } // JSON
     public bool IsVerifiedCreator { get; set; } = false;
     public string? CreatorTier { get; set; } // Bronze, Silver, Gold, Platinum
+    public bool IsAcceptingCommissions { get; set; } = false;
     public User? User { get; set; }
 }

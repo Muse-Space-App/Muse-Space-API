@@ -9,4 +9,5 @@ public interface ISocialService
     Task<GenericResult<UserProfileResponse>> GetUserProfileAsync(int targetUserId, int? requestingUserId, CancellationToken cancellationToken = default);
     Task<GenericResult<PagedResult<FollowerResponse>>> GetFollowersAsync(int userId, int page, int pageSize, CancellationToken cancellationToken = default);
     Task<GenericResult<PagedResult<FollowerResponse>>> GetFollowingAsync(int userId, int page, int pageSize, CancellationToken cancellationToken = default);
+    Task<GenericResult<bool>> ToggleAcceptingCommissionsAsync(int userId, bool isAccepting, CancellationToken cancellationToken = default);
 }

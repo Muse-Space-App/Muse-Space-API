@@ -15,6 +15,7 @@ public class UserProfileResponse
     public int FollowerCount { get; set; }
     public int FollowingCount { get; set; }
     public bool IsFollowing { get; set; } // Contextual to the requesting user
+    public bool IsAcceptingCommissions { get; set; }
 }
 
 public class FollowerResponse
@@ -23,4 +24,9 @@ public class FollowerResponse
     public string Username { get; set; } = string.Empty;
     public string AvatarUrl { get; set; } = string.Empty;
     public string Bio { get; set; } = string.Empty;
+}
+
+public class ToggleAcceptingCommissionsRequest
+{
+    public bool IsAcceptingCommissions { get; set; }
 }
