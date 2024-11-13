@@ -223,20 +223,17 @@ var app = builder.Build();
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
-if (app.Environment.IsDevelopment())
+app.MapOpenApi();
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    app.MapOpenApi();
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "MuseSpace API v1");
-        options.RoutePrefix = "swagger";
-        options.DefaultModelsExpandDepth(2);
-        options.DefaultModelExpandDepth(2);
-        options.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List);
-        options.DisplayOperationId();
-    });
-}
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "MuseSpace API v1");
+    options.RoutePrefix = "swagger";
+    options.DefaultModelsExpandDepth(2);
+    options.DefaultModelExpandDepth(2);
+    options.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List);
+    options.DisplayOperationId();
+});
 
 app.UseHttpsRedirection();
 app.UseRequestLogging();
