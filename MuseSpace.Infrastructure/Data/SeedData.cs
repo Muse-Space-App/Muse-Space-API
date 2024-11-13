@@ -219,6 +219,144 @@ public static class SeedData
         }
     }
 
+    /// <summary>
+    /// Seeds sample artworks with real Unsplash images (idempotent)
+    /// </summary>
+    public static async Task SeedArtworksAsync(this MuseSpaceDbContext context)
+    {
+        if (await context.Artwork.AnyAsync())
+        {
+            Console.WriteLine("Artworks already exist in the database");
+            return;
+        }
+
+        var users = await context.Users.Where(u => u.Username != "admin").ToListAsync();
+        if (!users.Any())
+        {
+            Console.WriteLine("No users found to assign artworks to - skipping artwork seeding");
+            return;
+        }
+
+        var tags = await context.Tags.ToListAsync();
+
+        var seedArtworks = new[]
+        {
+            new { Title = "Golden Hour Over the Mountains", Desc = "Warm light spilling across a vast mountain landscape at sunset.", Url = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200", Thumb = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400", UserIdx = 0, TagNames = new[] { "Landscape", "Photography" }, W = 1200, H = 800 },
+            new { Title = "Neon City Reflections", Desc = "Rain-soaked streets reflecting vibrant neon lights of the city.", Url = "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=1200", Thumb = "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=400", UserIdx = 1, TagNames = new[] { "Photography", "Digital Art" }, W = 1200, H = 800 },
+            new { Title = "Abstract Fluid Motion", Desc = "Swirling colors in a mesmerizing abstract composition.", Url = "https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=1200", Thumb = "https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=400", UserIdx = 2, TagNames = new[] { "Abstract", "Digital Art" }, W = 1200, H = 800 },
+            new { Title = "Serene Japanese Garden", Desc = "A tranquil garden scene with cherry blossoms and still water.", Url = "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=1200", Thumb = "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=400", UserIdx = 0, TagNames = new[] { "Landscape", "Photography" }, W = 1200, H = 800 },
+            new { Title = "Portrait in Natural Light", Desc = "Soft natural light creating a warm, intimate portrait.", Url = "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=1200", Thumb = "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400", UserIdx = 1, TagNames = new[] { "Portrait", "Photography" }, W = 1200, H = 900 },
+            new { Title = "Cosmic Nebula Dreams", Desc = "Deep space imagery revealing the beauty of distant nebulae.", Url = "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=1200", Thumb = "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400", UserIdx = 2, TagNames = new[] { "Digital Art", "Abstract" }, W = 1200, H = 800 },
+            new { Title = "Vintage Film Tones", Desc = "A nostalgic scene captured with warm vintage film aesthetics.", Url = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200", Thumb = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400", UserIdx = 0, TagNames = new[] { "Photography", "Illustration" }, W = 1200, H = 800 },
+            new { Title = "Watercolor Botanicals", Desc = "Delicate floral studies rendered in soft watercolor washes.", Url = "https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=1200", Thumb = "https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=400", UserIdx = 1, TagNames = new[] { "Watercolor", "Illustration" }, W = 1200, H = 900 },
+            new { Title = "Urban Architecture Lines", Desc = "Bold geometric patterns found in modern urban architecture.", Url = "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1200", Thumb = "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=400", UserIdx = 2, TagNames = new[] { "Photography", "Abstract" }, W = 1200, H = 800 },
+            new { Title = "Ocean Depths", Desc = "Mysterious deep blue ocean waves crashing against rocks.", Url = "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=1200", Thumb = "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=400", UserIdx = 0, TagNames = new[] { "Landscape", "Photography" }, W = 1200, H = 800 },
+            new { Title = "Digital Character Sketch", Desc = "A striking character design concept with bold color choices.", Url = "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1200", Thumb = "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400", UserIdx = 1, TagNames = new[] { "Character Design", "Digital Art" }, W = 1200, H = 900 },
+            new { Title = "Minimalist Still Life", Desc = "Clean, minimal composition with soft shadows and neutral tones.", Url = "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1200", Thumb = "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=400", UserIdx = 2, TagNames = new[] { "Photography", "Abstract" }, W = 1200, H = 800 },
+        };
+
+        var artworksToAdd = new List<Artwork>();
+        var artworkTagsToAdd = new List<ArtworkTag>();
+
+        foreach (var seed in seedArtworks)
+        {
+            var artwork = new Artwork
+            {
+                CreatorId = users[seed.UserIdx % users.Count].Id,
+                Title = seed.Title,
+                Description = seed.Desc,
+                ContentUrl = seed.Url,
+                ThumbnailUrl = seed.Thumb,
+                MediaType = "Image",
+                Width = seed.W,
+                Height = seed.H,
+                ViewCount = Random.Shared.Next(10, 500),
+                LikeCount = Random.Shared.Next(2, 80),
+                CommentCount = 0,
+                BookmarkCount = Random.Shared.Next(0, 30),
+                ShareCount = Random.Shared.Next(0, 15),
+                IsApproved = true,
+                CreatedAtUtc = DateTime.UtcNow.AddDays(-Random.Shared.Next(1, 30)),
+                CreatedBy = "System.SeedData"
+            };
+            artworksToAdd.Add(artwork);
+        }
+
+        await context.Artwork.AddRangeAsync(artworksToAdd);
+        await context.SaveChangesAsync();
+
+        foreach (var (artwork, idx) in artworksToAdd.Select((a, i) => (a, i)))
+        {
+            var seed = seedArtworks[idx];
+            foreach (var tagName in seed.TagNames)
+            {
+                var tag = tags.FirstOrDefault(t => t.Name == tagName);
+                if (tag != null)
+                {
+                    artworkTagsToAdd.Add(new ArtworkTag
+                    {
+                        ArtworkId = artwork.Id,
+                        TagId = tag.Id
+                    });
+                }
+            }
+        }
+
+        if (artworkTagsToAdd.Any())
+        {
+            await context.ArtworkTags.AddRangeAsync(artworkTagsToAdd);
+        }
+
+        Console.WriteLine($"Seeded {artworksToAdd.Count} artwork(s) with tags");
+    }
+
+    /// <summary>
+    /// Seeds sample groups and events (idempotent)
+    /// </summary>
+    public static async Task SeedGroupsAndEventsAsync(this MuseSpaceDbContext context)
+    {
+        var users = await context.Users.Where(u => u.Username != "admin").ToListAsync();
+        if (!users.Any()) return;
+
+        if (!await context.Groups.AnyAsync())
+        {
+            var groups = new[]
+            {
+                new Group { Name = "Digital Art Collective", Description = "A community for digital artists to share techniques, feedback, and inspiration.", CreatorId = users[0].Id, IsPrivate = false, CreatedAtUtc = DateTime.UtcNow.AddDays(-20), CreatedBy = "System.SeedData" },
+                new Group { Name = "Photography Enthusiasts", Description = "Share your best shots and learn from fellow photographers.", CreatorId = users[1].Id, IsPrivate = false, CreatedAtUtc = DateTime.UtcNow.AddDays(-15), CreatedBy = "System.SeedData" },
+                new Group { Name = "Watercolor Workshop", Description = "Weekly watercolor challenges and painting tips.", CreatorId = users[2 % users.Count].Id, IsPrivate = false, CreatedAtUtc = DateTime.UtcNow.AddDays(-10), CreatedBy = "System.SeedData" },
+            };
+
+            await context.Groups.AddRangeAsync(groups);
+            await context.SaveChangesAsync();
+
+            var members = new List<GroupMember>();
+            foreach (var group in groups)
+            {
+                members.Add(new GroupMember { GroupId = group.Id, UserId = group.CreatorId, Role = "Admin", JoinedAtUtc = group.CreatedAtUtc });
+                foreach (var user in users.Where(u => u.Id != group.CreatorId))
+                {
+                    members.Add(new GroupMember { GroupId = group.Id, UserId = user.Id, Role = "Member", JoinedAtUtc = DateTime.UtcNow.AddDays(-Random.Shared.Next(1, 10)) });
+                }
+            }
+            await context.GroupMembers.AddRangeAsync(members);
+            Console.WriteLine($"Seeded {groups.Length} group(s) with members");
+        }
+
+        if (!await context.Events.AnyAsync())
+        {
+            var events = new[]
+            {
+                new Event { Title = "Galactic Art Showcase", Description = "An evening of cosmic-inspired art from creators worldwide.", OrganizerId = users[0].Id, StartDateUtc = DateTime.UtcNow.AddDays(14), EndDateUtc = DateTime.UtcNow.AddDays(14).AddHours(3), Location = "Virtual Gallery", IsOnline = true, CreatedAtUtc = DateTime.UtcNow.AddDays(-5), CreatedBy = "System.SeedData" },
+                new Event { Title = "Portrait Drawing Workshop", Description = "Learn portrait fundamentals with live model sessions.", OrganizerId = users[1].Id, StartDateUtc = DateTime.UtcNow.AddDays(21), EndDateUtc = DateTime.UtcNow.AddDays(21).AddHours(2), Location = "Studio Room A", IsOnline = false, CreatedAtUtc = DateTime.UtcNow.AddDays(-3), CreatedBy = "System.SeedData" },
+                new Event { Title = "Digital Art Meetup", Description = "Monthly meetup for digital artists to network and share work.", OrganizerId = users[2 % users.Count].Id, StartDateUtc = DateTime.UtcNow.AddDays(7), EndDateUtc = DateTime.UtcNow.AddDays(7).AddHours(2), Location = "Online - Discord", IsOnline = true, CreatedAtUtc = DateTime.UtcNow.AddDays(-1), CreatedBy = "System.SeedData" },
+            };
+
+            await context.Events.AddRangeAsync(events);
+            Console.WriteLine($"Seeded {events.Length} event(s)");
+        }
+    }
+
     private static string GetRoleDescription(string roleName) => roleName switch
     {
         "Admin" => "Administrator",

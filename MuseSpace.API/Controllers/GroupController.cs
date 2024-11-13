@@ -52,6 +52,20 @@ public class GroupController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>Gets all groups (paged).</summary>
+    /// <param name="page">Page number</param>
+    /// <param name="pageSize">Page size</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Paged groups</returns>
+    [HttpGet]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(GenericResult<PagedResult<GroupResponse>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAllGroups([FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
+    {
+        var result = await _groupService.GetAllGroupsAsync(page, pageSize, cancellationToken);
+        return Ok(result);
+    }
+
     /// <summary>Updates an existing group.</summary>
     /// <param name="groupId">The group identifier.</param>
     /// <param name="request">The group update request.</param>

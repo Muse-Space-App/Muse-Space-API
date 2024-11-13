@@ -271,6 +271,10 @@ using (var scope = app.Services.CreateAsyncScope())
 
                 await dbContext.SeedUsersAsync();
                 await dbContext.SaveChangesAsync();
+                
+                await dbContext.SeedGroupsAndEventsAsync();
+                await dbContext.SeedArtworksAsync();
+                await dbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
 
                 Console.WriteLine("Database initialization completed successfully");
