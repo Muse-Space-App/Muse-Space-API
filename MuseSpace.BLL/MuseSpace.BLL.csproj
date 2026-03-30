@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+	<ProjectReference Include="..\MuseSpace.Infrastructure\MuseSpace.Infrastructure.csproj" />
+    <ProjectReference Include="..\MuseSpace.Core\MuseSpace.Core.csproj" />
+    <ProjectReference Include="..\MuseSpace.Core\MuseSpace.Core.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Folder Include="DTO\" />
+    <Folder Include="Exceptions\" />
+    <Folder Include="Mappings\" />
+    <Folder Include="Services\" />
+    <Folder Include="Utilities\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="16.1.1" />
+    <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
