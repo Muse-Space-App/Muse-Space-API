@@ -1,9 +1,6 @@
-namespace MuseSpace.BLL.Utilities;
+using MuseSpace.Core.Interfaces.Services;
 
-public interface IDateTimeProvider
-{
-    DateTime UtcNow { get; }
-}
+namespace MuseSpace.BLL.Utilities;
 
 public sealed class DateTimeProvider : IDateTimeProvider
 {
