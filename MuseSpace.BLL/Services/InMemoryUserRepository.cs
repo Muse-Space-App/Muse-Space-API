@@ -44,6 +44,12 @@ public sealed class InMemoryUserRepository : IUserRepository
         return Task.FromResult(user);
     }
 
+    public Task<User?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var user = _users.FirstOrDefault(u => u.Id == id);
+        return Task.FromResult(user);
+    }
+
     public Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken = default)
     {
         var exists = _users.Any(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
@@ -65,6 +71,43 @@ public sealed class InMemoryUserRepository : IUserRepository
             var index = _users.IndexOf(existingUser);
             _users[index] = user;
         }
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var user = _users.FirstOrDefault(u => u.Id == id);
+        if (user != null)
+        {
+            _users.Remove(user);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task AddRangeAsync(IEnumerable<User> entities, CancellationToken cancellationToken = default)
+    {
+        foreach (var user in entities)
+        {
+            user.Id = _nextId++;
+            _users.Add(user);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task UpdateRangeAsync(IEnumerable<User> entities, CancellationToken cancellationToken = default)
+    {
+        foreach (var user in entities)
+        {
+            var existingUser = _users.FirstOrDefault(u => u.Id == user.Id);
+            if (existingUser != null)
+            {
+                var index = _users.IndexOf(existingUser);
+                _users[index] = user;
+            }
+        }
+
         return Task.CompletedTask;
     }
 }
