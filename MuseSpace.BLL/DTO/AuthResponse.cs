@@ -42,3 +42,19 @@ public sealed class UserDto
 
     public DateTime? LastLoginUtc { get; set; }
 }
+
+public sealed class OtpGenerateResponse
+{
+    public bool Success { get; set; }
+
+    public string Message { get; set; } = string.Empty;
+
+    public string? ExpiresIn { get; set; } // "15 minutes", "1 hour"
+}
+
+public sealed class OtpVerifyResponse
+{
+    public bool Success { get; set; }
+
+    public string Message { get; set; } = string.Empty;
+}

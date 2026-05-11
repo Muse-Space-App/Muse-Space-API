@@ -12,6 +12,7 @@ public sealed class MuseSpaceDbContext : DbContext
     public DbSet<Role> Roles { get; set; } = null!;
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<UserProfile> UserProfiles { get; set; } = null!;
+    public DbSet<Otp> Otps { get; set; } = null!;
     public DbSet<Artwork> Artwork { get; set; } = null!;
     public DbSet<Tag> Tags { get; set; } = null!;
     public DbSet<ArtworkTag> ArtworkTags { get; set; } = null!;
@@ -55,6 +56,16 @@ public sealed class MuseSpaceDbContext : DbContext
             entity.HasMany(e => e.Following).WithOne(f => f.FollowingUser).HasForeignKey(f => f.FollowingId).OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(e => e.Reports).WithOne(r => r.ReportedBy).HasForeignKey(r => r.ReportedById).OnDelete(DeleteBehavior.NoAction);
             entity.HasMany(e => e.Notifications).WithOne(n => n.User).HasForeignKey(n => n.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Otp>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.UserId, e.Purpose, e.IsUsed });
+            entity.HasIndex(e => e.ExpiresAtUtc);
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Purpose).IsRequired().HasMaxLength(50);
+            entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<UserProfile>(entity =>

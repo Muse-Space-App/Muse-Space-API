@@ -10,7 +10,7 @@ public interface IUserRepository : IRepository<User>
 
     Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken = default);
 
-    Task AddAsync(User user, CancellationToken cancellationToken = default);
+    new Task AddAsync(User user, CancellationToken cancellationToken = default);
 
-    Task UpdateAsync(User user, CancellationToken cancellationToken = default);
+    new Task UpdateAsync(User user, CancellationToken cancellationToken = default);
 }

@@ -21,6 +21,11 @@ public sealed class TokenService : ITokenService
 
     public string GenerateAccessToken(User user)
     {
+        return GenerateAccessTokenWithExpiry(user).AccessToken;
+    }
+
+    public (string AccessToken, DateTime ExpiresAtUtc) GenerateAccessTokenWithExpiry(User user)
+    {
         var jwtSettings = _configuration.GetSection("Jwt");
         var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured")));
         var creds = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
@@ -45,7 +50,8 @@ public sealed class TokenService : ITokenService
             expires: expiresAt,
             signingCredentials: creds);
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
+        return (accessToken, expiresAt);
     }
 
     public string GenerateRefreshToken()
