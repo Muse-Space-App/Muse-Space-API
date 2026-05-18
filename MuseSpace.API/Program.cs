@@ -43,7 +43,6 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// Add Entity Framework Core with PostgreSQL
 var connectionString = builder.Configuration.GetConnectionString("Postgres") ?? throw new InvalidOperationException("Connection string 'Postgres' not found");
 builder.Services.AddDbContext<MuseSpaceDbContext>(options =>
     options.UseNpgsql(connectionString, npgsqlOptions =>
@@ -53,6 +52,9 @@ builder.Services.AddDbContext<MuseSpaceDbContext>(options =>
     }));
 
 builder.Services.AddControllers();
+
+builder.Services.AddRouting(options => options.LowercaseUrls = true);
+
 builder.Services.AddOpenApi();
 
 builder.Services.AddSwaggerGen(options =>
