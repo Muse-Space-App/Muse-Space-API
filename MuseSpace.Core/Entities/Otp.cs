@@ -2,7 +2,7 @@ namespace MuseSpace.Core.Entities;
 
 public sealed class Otp : BaseEntity
 {
-    public int UserId { get; set; }    
+    public int UserId { get; set; }
     public string Code { get; set; } = string.Empty;
     public string Purpose { get; set; } = string.Empty; // "EmailVerification", "ForgotPassword"
     public DateTime ExpiresAtUtc { get; set; }

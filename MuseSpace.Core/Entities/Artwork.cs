@@ -8,9 +8,14 @@ public sealed class Artwork : BaseEntity
     public string ContentUrl { get; set; } = string.Empty;
     public string ThumbnailUrl { get; set; } = string.Empty;
     public string MediaType { get; set; } = string.Empty; // Image, GIF, Video
+    public int? Width { get; set; }
+    public int? Height { get; set; }
+    public string? AiDescription { get; set; }
     public int ViewCount { get; set; } = 0;
     public int LikeCount { get; set; } = 0;
     public int CommentCount { get; set; } = 0;
+    public int BookmarkCount { get; set; } = 0;
+    public int ShareCount { get; set; } = 0;
     public bool IsApproved { get; set; } = false;
     public bool IsSoftDeleted { get; set; } = false;
     public DateTime? DeletedAtUtc { get; set; }
@@ -19,5 +24,7 @@ public sealed class Artwork : BaseEntity
     public ICollection<ArtworkTag> ArtworkTags { get; set; } = new List<ArtworkTag>();
     public ICollection<Comment> Comments { get; set; } = new List<Comment>();
     public ICollection<Like> Likes { get; set; } = new List<Like>();
+    public ICollection<Bookmark> Bookmarks { get; set; } = new List<Bookmark>();
+    public ICollection<Share> Shares { get; set; } = new List<Share>();
     public ICollection<Report> Reports { get; set; } = new List<Report>();
 }

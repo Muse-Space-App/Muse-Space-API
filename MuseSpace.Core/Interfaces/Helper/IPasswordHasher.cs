@@ -8,7 +8,7 @@ public interface IPasswordHashHelper
     /// <param name="password"></param>
     /// <returns></returns>
     string HashPassword(string password);
-    
+
     /// <summary>
     /// Verifies a plaintext password against a hashed password.
     /// </summary>
