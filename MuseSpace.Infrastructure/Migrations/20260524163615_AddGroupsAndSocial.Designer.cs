@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MuseSpace.Infrastructure.Data;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MuseSpace.Infrastructure.Migrations
 {
     [DbContext(typeof(MuseSpaceDbContext))]
-    partial class MuseSpaceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260524163615_AddGroupsAndSocial")]
+    partial class AddGroupsAndSocial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -275,212 +278,6 @@ namespace MuseSpace.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Comments");
-                });
-
-            modelBuilder.Entity("MuseSpace.Core.Entities.Commission", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ArtistId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("CompletedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("DeadlineUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(5000)
-                        .HasColumnType("character varying(5000)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("RequesterId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<DateTime?>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ArtistId");
-
-                    b.HasIndex("CreatedAtUtc");
-
-                    b.HasIndex("RequesterId");
-
-                    b.HasIndex("Status");
-
-                    b.ToTable("Commissions");
-                });
-
-            modelBuilder.Entity("MuseSpace.Core.Entities.CommissionMessage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CommissionId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("SenderId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CommissionId");
-
-                    b.HasIndex("CreatedAtUtc");
-
-                    b.HasIndex("SenderId");
-
-                    b.ToTable("CommissionMessages");
-                });
-
-            modelBuilder.Entity("MuseSpace.Core.Entities.Event", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("BannerUrl")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(5000)
-                        .HasColumnType("character varying(5000)");
-
-                    b.Property<DateTime>("EndDateUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("EventUrl")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsOnline")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Location")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<int>("OrganizerId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("RsvpCount")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("StartDateUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<DateTime?>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrganizerId");
-
-                    b.HasIndex("StartDateUtc");
-
-                    b.ToTable("Events");
-                });
-
-            modelBuilder.Entity("MuseSpace.Core.Entities.EventRsvp", b =>
-                {
-                    b.Property<int>("EventId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("RsvpedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("EventId", "UserId");
-
-                    b.HasIndex("RsvpedAtUtc");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("EventRsvps");
                 });
 
             modelBuilder.Entity("MuseSpace.Core.Entities.Follow", b =>
@@ -1249,74 +1046,6 @@ namespace MuseSpace.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("MuseSpace.Core.Entities.Commission", b =>
-                {
-                    b.HasOne("MuseSpace.Core.Entities.User", "Artist")
-                        .WithMany("ReceivedCommissions")
-                        .HasForeignKey("ArtistId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("MuseSpace.Core.Entities.User", "Requester")
-                        .WithMany("RequestedCommissions")
-                        .HasForeignKey("RequesterId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Artist");
-
-                    b.Navigation("Requester");
-                });
-
-            modelBuilder.Entity("MuseSpace.Core.Entities.CommissionMessage", b =>
-                {
-                    b.HasOne("MuseSpace.Core.Entities.Commission", "Commission")
-                        .WithMany("Messages")
-                        .HasForeignKey("CommissionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MuseSpace.Core.Entities.User", "Sender")
-                        .WithMany("CommissionMessages")
-                        .HasForeignKey("SenderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Commission");
-
-                    b.Navigation("Sender");
-                });
-
-            modelBuilder.Entity("MuseSpace.Core.Entities.Event", b =>
-                {
-                    b.HasOne("MuseSpace.Core.Entities.User", "Organizer")
-                        .WithMany("OrganizedEvents")
-                        .HasForeignKey("OrganizerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Organizer");
-                });
-
-            modelBuilder.Entity("MuseSpace.Core.Entities.EventRsvp", b =>
-                {
-                    b.HasOne("MuseSpace.Core.Entities.Event", "Event")
-                        .WithMany("Rsvps")
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MuseSpace.Core.Entities.User", "User")
-                        .WithMany("EventRsvps")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Event");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("MuseSpace.Core.Entities.Follow", b =>
                 {
                     b.HasOne("MuseSpace.Core.Entities.User", "Follower")
@@ -1527,16 +1256,6 @@ namespace MuseSpace.Infrastructure.Migrations
                     b.Navigation("Replies");
                 });
 
-            modelBuilder.Entity("MuseSpace.Core.Entities.Commission", b =>
-                {
-                    b.Navigation("Messages");
-                });
-
-            modelBuilder.Entity("MuseSpace.Core.Entities.Event", b =>
-                {
-                    b.Navigation("Rsvps");
-                });
-
             modelBuilder.Entity("MuseSpace.Core.Entities.Group", b =>
                 {
                     b.Navigation("Members");
@@ -1560,13 +1279,9 @@ namespace MuseSpace.Infrastructure.Migrations
 
                     b.Navigation("Comments");
 
-                    b.Navigation("CommissionMessages");
-
                     b.Navigation("CreatedArtwork");
 
                     b.Navigation("CreatedGroups");
-
-                    b.Navigation("EventRsvps");
 
                     b.Navigation("Followers");
 
@@ -1580,13 +1295,7 @@ namespace MuseSpace.Infrastructure.Migrations
 
                     b.Navigation("Notifications");
 
-                    b.Navigation("OrganizedEvents");
-
-                    b.Navigation("ReceivedCommissions");
-
                     b.Navigation("Reports");
-
-                    b.Navigation("RequestedCommissions");
 
                     b.Navigation("Shares");
 
