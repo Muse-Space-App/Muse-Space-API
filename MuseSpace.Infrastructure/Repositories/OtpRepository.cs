@@ -58,6 +58,18 @@ public sealed class OtpRepository : IOtpRepository
         await _context.SaveChangesAsync(cancellationToken);
     }
 
+    public void Update(Otp entity)
+    {
+        _context.Otps.Update(entity);
+        _context.SaveChanges();
+    }
+
+    public void Delete(Otp entity)
+    {
+        _context.Otps.Remove(entity);
+        _context.SaveChanges();
+    }
+
     public async Task<Otp?> GetLatestValidOtpAsync(
         int userId,
         string purpose,

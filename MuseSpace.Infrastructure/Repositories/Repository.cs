@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using MuseSpace.Core.Entities;
 using MuseSpace.Core.Interfaces.Repositories;
 using MuseSpace.Infrastructure.Data;
 
@@ -8,9 +9,10 @@ namespace MuseSpace.Infrastructure.Repositories;
 /// Generic repository implementation for all entities
 /// Provides basic CRUD operations and follows ACID principles
 /// </summary>
-public sealed class Repository<T> : IRepository<T> where T : class
+public class Repository<T> : IRepository<T> where T : BaseEntity
 {
     private readonly MuseSpaceDbContext _dbContext;
+    private readonly DbSet<T> _dbSet;
 
     /// <summary>
     /// Constructor with dependency injection of the DbContext
@@ -19,6 +21,7 @@ public sealed class Repository<T> : IRepository<T> where T : class
     public Repository(MuseSpaceDbContext dbContext)
     {
         _dbContext = dbContext;
+        _dbSet = dbContext.Set<T>();
     }
 
     /// <summary>
@@ -29,7 +32,7 @@ public sealed class Repository<T> : IRepository<T> where T : class
 
     public async Task<IReadOnlyCollection<T>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Set<T>()
+        return await _dbSet
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
@@ -40,11 +43,11 @@ public sealed class Repository<T> : IRepository<T> where T : class
     /// <param name="id"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public async Task<T?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    public virtual async Task<T?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Set<T>()
+        return await _dbSet
             .AsNoTracking()
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
     }
 
     /// <summary>
@@ -52,9 +55,20 @@ public sealed class Repository<T> : IRepository<T> where T : class
     /// </summary>
     /// <param name="entity"></param>
     /// <param name="cancellationToken"></param>
-    public async Task AddAsync(T entity, CancellationToken cancellationToken = default)
+    public virtual async Task AddAsync(T entity, CancellationToken cancellationToken = default)
     {
-        await _dbContext.Set<T>().AddAsync(entity, cancellationToken);
+        await _dbSet.AddAsync(entity, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Adds multiple entities in a single transaction
+    /// </summary>
+    /// <param name="entities"></param>
+    /// <param name="cancellationToken"></param>
+    public async Task AddRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default)
+    {
+        await _dbSet.AddRangeAsync(entities, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
@@ -70,39 +84,48 @@ public sealed class Repository<T> : IRepository<T> where T : class
     }
 
     /// <summary>
-    /// Deletes an entity by its ID
-    /// </summary>
-    /// <param name="id"></param>
-    /// <param name="cancellationToken"></param>
-    public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
-    {
-        var entity = await _dbContext.Set<T>().FindAsync(new object[] { id }, cancellationToken: cancellationToken);
-        if (entity != null)
-        {
-            _dbContext.Set<T>().Remove(entity);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }
-    }
-
-    /// <summary>
-    /// Adds multiple entities in a single transaction
-    /// </summary>
-    /// <param name="entities"></param>
-    /// <param name="cancellationToken"></param>
-    public async Task AddRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default)
-    {
-        await _dbContext.Set<T>().AddRangeAsync(entities, cancellationToken);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-    }
-
-    /// <summary>
     /// Updates multiple entities in a single transaction
     /// </summary>
     /// <param name="entities"></param>
     /// <param name="cancellationToken"></param>
     public async Task UpdateRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default)
     {
-        _dbContext.Set<T>().UpdateRange(entities);
+        _dbSet.UpdateRange(entities);
         await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Updates an entity without saving changes immediately.
+    /// This allows for batch updates or transactions to be handled at a higher level, ensuring that multiple operations can be performed atomically.
+    /// The caller is responsible for calling SaveChangesAsync after all updates are made to persist the changes to the database.
+    /// </summary>
+    /// <param name="entity"></param>
+    public void Update(T entity)
+    {
+        _dbSet.Update(entity);
+    }
+
+    /// <summary>
+    /// Deletes an entity by its ID
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="cancellationToken"></param>
+    public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var entity = await _dbSet.FindAsync(new object[] { id }, cancellationToken: cancellationToken);
+        if (entity != null)
+        {
+            _dbSet.Remove(entity);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// Soft deletes an entity by setting its IsDeleted flag to true and updating the UpdatedAt timestamp. This allows for logical deletion of records while preserving data integrity and enabling potential recovery of deleted entities. The caller is responsible for calling SaveChangesAsync after this operation to persist the changes to the database.
+    /// </summary>
+    /// <param name="entity"></param>
+    public void Delete(T entity)
+    {
+        _dbSet.Update(entity);
     }
 }

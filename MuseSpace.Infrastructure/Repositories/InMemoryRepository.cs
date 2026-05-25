@@ -1,8 +1,9 @@
+using MuseSpace.Core.Entities;
 using MuseSpace.Core.Interfaces.Repositories;
 
 namespace MuseSpace.Infrastructure.Repositories;
 
-public sealed class InMemoryRepository<T> : IRepository<T>
+public sealed class InMemoryRepository<T> : IRepository<T> where T : BaseEntity
 {
     private readonly IReadOnlyCollection<T> _items;
 
@@ -42,6 +43,16 @@ public sealed class InMemoryRepository<T> : IRepository<T>
     }
 
     public Task UpdateRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default)
+    {
+        throw new NotSupportedException("In-memory repository is read-only.");
+    }
+
+    public void Update(T entity)
+    {
+        throw new NotSupportedException("In-memory repository is read-only.");
+    }
+
+    public void Delete(T entity)
     {
         throw new NotSupportedException("In-memory repository is read-only.");
     }
