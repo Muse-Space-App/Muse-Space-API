@@ -4,7 +4,7 @@ using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using MuseSpace.Core.Entities;
-using MuseSpace.Core.Interfaces.Services;
+using MuseSpace.BLL.Interfaces.Services;
 
 namespace MuseSpace.BLL.Services;
 

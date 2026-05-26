@@ -110,4 +110,39 @@ public sealed class InMemoryUserRepository : IUserRepository
 
         return Task.CompletedTask;
     }
+
+    public Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(_users.FirstOrDefault(u => u.RefreshToken == refreshToken));
+    }
+
+    public Task<IReadOnlyCollection<User>> SearchAsync(string query, int skip, int take, CancellationToken cancellationToken = default)
+    {
+        var result = _users
+            .Where(u => u.Username.Contains(query) || (u.FirstName != null && u.FirstName.Contains(query)) || (u.LastName != null && u.LastName.Contains(query)))
+            .Skip(skip)
+            .Take(take)
+            .ToList();
+
+        return Task.FromResult<IReadOnlyCollection<User>>(result);
+    }
+
+    public void Update(User entity)
+    {
+        var existingUser = _users.FirstOrDefault(u => u.Id == entity.Id);
+        if (existingUser != null)
+        {
+            var index = _users.IndexOf(existingUser);
+            _users[index] = entity;
+        }
+    }
+
+    public void Delete(User entity)
+    {
+        var existingUser = _users.FirstOrDefault(u => u.Id == entity.Id);
+        if (existingUser != null)
+        {
+            _users.Remove(existingUser);
+        }
+    }
 }

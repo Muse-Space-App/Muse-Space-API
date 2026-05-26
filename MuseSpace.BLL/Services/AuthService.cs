@@ -1,10 +1,10 @@
 using AutoMapper;
 using MuseSpace.BLL.DTO;
+using MuseSpace.BLL.Interfaces.Services;
 using MuseSpace.BLL.Mappings;
 using MuseSpace.BLL.Helper;
 using MuseSpace.Core.Entities;
 using MuseSpace.Core.Interfaces.Repositories;
-using MuseSpace.Core.Interfaces.Services;
 using MuseSpace.Core.Interfaces.Helper;
 
 namespace MuseSpace.BLL.Services;

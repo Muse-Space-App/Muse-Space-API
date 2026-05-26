@@ -1,5 +1,5 @@
 using MuseSpace.BLL.DTO;
-using MuseSpace.Core.Interfaces.Services;
+using MuseSpace.BLL.Interfaces.Services;
 
 namespace MuseSpace.BLL.Services;
 

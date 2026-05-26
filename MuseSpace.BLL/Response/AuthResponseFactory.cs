@@ -1,7 +1,7 @@
 using AutoMapper;
 using MuseSpace.BLL.DTO;
 using MuseSpace.Core.Entities;
-using MuseSpace.Core.Interfaces.Services;
+using MuseSpace.BLL.Interfaces.Services;
 
 namespace MuseSpace.BLL.Response;
 
