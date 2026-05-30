@@ -58,3 +58,13 @@ nunit-*.xml
 
 # Secrets
 appsettings*.json
+
+
+# Temp/generated files
+build_output.txt
+OTP_IMPLEMENTATION_GUIDE.md
+OTP_QUICK_REFERENCE.md
+SWAGGER_QUICK_START.md
+SWAGGER_SETUP_GUIDE.md
+IMPLEMENTATION_CHECKLIST.md
+logs/

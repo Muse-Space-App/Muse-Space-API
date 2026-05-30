@@ -5,7 +5,7 @@ using MuseSpace.BLL.DTO;
 using MuseSpace.BLL.Response;
 using MuseSpace.BLL.Services;
 using MuseSpace.Core.Interfaces.Repositories;
-using MuseSpace.Core.Interfaces.Services;
+using MuseSpace.BLL.Interfaces.Services;
 
 namespace MuseSpace.API.Controllers;
 
@@ -33,7 +33,7 @@ public sealed class AuthController : ControllerBase
     /// <param name="authResponseFactory">Factory for building auth responses with tokens and user data</param>
     /// <remarks>
     /// The constructor injects the necessary services and repositories required for authentication operations. The IAuthService is responsible for handling the core authentication logic such as registering users and validating credentials. The ITokenService is used for generating JWT access tokens and refresh tokens, as well as validating them. The IUserRepository allows the controller to access user data from the database when needed, such as during OTP generation or verification. This setup follows the dependency injection pattern, promoting loose coupling and easier testing.
-     /// </remarks>
+    /// </remarks>
     public AuthController(
         IAuthService authService,
         ITokenService tokenService,
@@ -176,15 +176,22 @@ public sealed class AuthController : ControllerBase
         [FromBody] RefreshTokenRequest request,
         CancellationToken cancellationToken = default)
     {
-        var principal = _tokenService.GetPrincipalFromExpiredToken(request.RefreshToken);
-        if (principal == null)
+        var user = await _userRepository.GetByRefreshTokenAsync(request.RefreshToken, cancellationToken);
+        if (user == null || user.RefreshTokenExpiryUtc <= DateTime.UtcNow)
             return Unauthorized(new { message = "Invalid or expired refresh token" });
+
+        var tokenInfo = _tokenService.GenerateAccessTokenWithExpiry(user);
+        var newRefreshToken = _tokenService.GenerateRefreshToken();
+
+        user.RefreshToken = newRefreshToken;
+        user.RefreshTokenExpiryUtc = DateTime.UtcNow.AddDays(7);
+        await _userRepository.UpdateAsync(user, cancellationToken);
 
         return Ok(new TokenResponse
         {
-            AccessToken = "new-access-token",
-            RefreshToken = request.RefreshToken,
-            ExpiresAt = DateTime.UtcNow.AddMinutes(60)
+            AccessToken = tokenInfo.AccessToken,
+            RefreshToken = newRefreshToken,
+            ExpiresAt = tokenInfo.ExpiresAtUtc
         });
     }
 
@@ -309,7 +316,7 @@ public sealed class AuthController : ControllerBase
     /// </summary>
     /// <remarks>
     /// OTP verification is currently disabled. The legacy implementation is preserved in comments for future reactivation.
-     /// </remarks>
+    /// </remarks>
     [HttpPost("otp/verify-email")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(OtpVerifyResponse), StatusCodes.Status200OK)]

@@ -1,9 +1,13 @@
 using System.Text;
+using System.Threading.RateLimiting;
+using Serilog;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MuseSpace.API.Middleware;
+using MuseSpace.API.Services;
 using MuseSpace.BLL.DTO;
 using MuseSpace.BLL.Helper;
 using MuseSpace.BLL.Mappings;
@@ -12,11 +16,22 @@ using MuseSpace.BLL.Services;
 using MuseSpace.BLL.Utilities;
 using MuseSpace.Core.Interfaces.Helper;
 using MuseSpace.Core.Interfaces.Repositories;
+using MuseSpace.BLL.Interfaces.Services;
 using MuseSpace.Core.Interfaces.Services;
 using MuseSpace.Infrastructure.Data;
 using MuseSpace.Infrastructure.Repositories;
 
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File("logs/musespace-.log", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7)
+    .CreateLogger();
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog();
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var secretKey = Encoding.UTF8.GetBytes(jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey is not configured"));
@@ -52,6 +67,47 @@ builder.Services.AddDbContext<MuseSpaceDbContext>(options =>
     }));
 
 builder.Services.AddControllers();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+var redisConnectionString = builder.Configuration.GetValue<string>("Redis:ConnectionString");
+if (!string.IsNullOrEmpty(redisConnectionString))
+{
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = redisConnectionString;
+        options.InstanceName = builder.Configuration.GetValue<string>("Redis:InstanceName") ?? "MuseSpace_";
+    });
+}
+else
+{
+    builder.Services.AddDistributedMemoryCache();
+    builder.Services.AddMemoryCache();
+}
+builder.Services.AddSignalR();
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? httpContext.Request.Headers.Host.ToString(),
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 100,
+                QueueLimit = 0,
+                Window = TimeSpan.FromMinutes(1)
+            }));
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
 
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
@@ -112,25 +168,59 @@ builder.Services.AddScoped<IService<SampleDto>, SampleService>();
 builder.Services.AddScoped<IDateTimeProvider, DateTimeProvider>();
 builder.Services.AddScoped<IPasswordHashHelper, BCryptPasswordHashHelper>();
 builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IAuthResponseFactory, AuthResponseFactory>();
-// builder.Services.AddScoped<IOtpService>(sp => 
-//     new OtpService(
-//         sp.GetRequiredService<IOtpRepository>(),
-//         sp.GetRequiredService<IDateTimeProvider>(),
-//         builder.Configuration));
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IOtpRepository, OtpRepository>();
+builder.Services.AddScoped<IArtworkRepository, ArtworkRepository>();
+builder.Services.AddScoped<ITagRepository, TagRepository>();
+builder.Services.AddScoped<IInteractionRepository, InteractionRepository>();
+builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+builder.Services.AddScoped<ISocialRepository, SocialRepository>();
+builder.Services.AddScoped<IGroupRepository, GroupRepository>();
+builder.Services.AddScoped<IEventRepository, EventRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<ICommissionRepository, CommissionRepository>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IAuthResponseFactory, AuthResponseFactory>();
+builder.Services.AddScoped<IOtpService>(sp =>
+    new OtpService(
+        sp.GetRequiredService<IOtpRepository>(),
+        sp.GetRequiredService<IDateTimeProvider>(),
+        builder.Configuration));
+builder.Services.AddScoped<IMediaUploadService, MuseSpace.Infrastructure.ExternalServices.CloudinaryMediaUploadService>();
+builder.Services.AddScoped<IArtworkService, ArtworkService>();
+builder.Services.AddScoped<ITagService, TagService>();
+builder.Services.AddScoped<IInteractionService, InteractionService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<ISocialService, SocialService>();
+builder.Services.AddScoped<IGroupService, GroupService>();
+builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<INotificationDispatcher, SignalRNotificationDispatcher>();
+builder.Services.AddScoped<IRecommendationService, RecommendationService>();
+builder.Services.AddScoped<ICommissionService, CommissionService>();
+builder.Services.AddScoped<ISearchService, SearchService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<IPaymentService, QrisPaymentService>();
+builder.Services.AddHttpClient<IAiDescriptionService, GeminiDescriptionService>();
 
 builder.Services.AddAutoMapper(cfg =>
 {
     cfg.AddProfile<MappingProfile>();
     cfg.AddProfile<AuthMappingProfile>();
+    cfg.AddProfile<ArtworkMappingProfile>();
+    cfg.AddProfile<GroupMappingProfile>();
+    cfg.AddProfile<EventMappingProfile>();
 });
 
 var app = builder.Build();
+
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
@@ -150,10 +240,14 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRequestLogging();
 
+app.UseRateLimiter();
+app.UseCors("AllowAll");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<MuseSpace.API.Hubs.NotificationHub>("/hubs/notifications");
 
 using (var scope = app.Services.CreateAsyncScope())
 {
@@ -191,4 +285,11 @@ using (var scope = app.Services.CreateAsyncScope())
     }
 }
 
-app.Run();
+try
+{
+    app.Run();
+}
+finally
+{
+    Log.CloseAndFlush();
+}
