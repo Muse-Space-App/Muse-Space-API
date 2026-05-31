@@ -1,4 +1,4 @@
-using MuseSpace.Core.Interfaces.Services;
+using MuseSpace.BLL.Interfaces.Services;
 
 namespace MuseSpace.BLL.Utilities;
 

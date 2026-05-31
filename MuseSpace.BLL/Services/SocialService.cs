@@ -1,0 +1,147 @@
+using AutoMapper;
+using MuseSpace.BLL.DTO;
+using MuseSpace.BLL.Interfaces.Services;
+using MuseSpace.Core.Entities;
+using MuseSpace.Core.Enums;
+using MuseSpace.Core.Interfaces.Repositories;
+using MuseSpace.Core.Results;
+
+namespace MuseSpace.BLL.Services;
+
+public class SocialService : ISocialService
+{
+    private readonly ISocialRepository _socialRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly IMapper _mapper;
+
+    public SocialService(ISocialRepository socialRepository, IUserRepository userRepository, IMapper mapper)
+    {
+        _socialRepository = socialRepository;
+        _userRepository = userRepository;
+        _mapper = mapper;
+    }
+
+    public async Task<GenericResult<bool>> ToggleFollowAsync(int followerId, int followingId, CancellationToken cancellationToken = default)
+    {
+        if (followerId == followingId)
+        {
+            return GenericResult<bool>.Failure("You cannot follow yourself", ErrorType.ValidationFailed);
+        }
+
+        var followingUser = await _userRepository.GetByIdAsync(followingId, cancellationToken);
+        if (followingUser == null)
+        {
+            return GenericResult<bool>.Failure("User not found", ErrorType.NotFound);
+        }
+
+        var isFollowing = await _socialRepository.IsFollowingAsync(followerId, followingId, cancellationToken);
+
+        if (isFollowing)
+        {
+            var follow = new Follow { FollowerId = followerId, FollowingId = followingId };
+            await _socialRepository.RemoveFollowAsync(follow, cancellationToken);
+            return GenericResult<bool>.Success(false, "Unfollowed successfully");
+        }
+        else
+        {
+            var follow = new Follow { FollowerId = followerId, FollowingId = followingId };
+            await _socialRepository.AddFollowAsync(follow, cancellationToken);
+            return GenericResult<bool>.Success(true, "Followed successfully");
+        }
+    }
+
+    public async Task<GenericResult<UserProfileResponse>> GetUserProfileAsync(int targetUserId, int? requestingUserId, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByIdAsync(targetUserId, cancellationToken);
+        if (user == null)
+        {
+            return GenericResult<UserProfileResponse>.Failure("User not found", ErrorType.NotFound);
+        }
+
+        var followerCount = await _socialRepository.GetFollowerCountAsync(targetUserId, cancellationToken);
+        var followingCount = await _socialRepository.GetFollowingCountAsync(targetUserId, cancellationToken);
+
+        bool isFollowing = false;
+        if (requestingUserId.HasValue && requestingUserId.Value != targetUserId)
+        {
+            isFollowing = await _socialRepository.IsFollowingAsync(requestingUserId.Value, targetUserId, cancellationToken);
+        }
+
+        var response = new UserProfileResponse
+        {
+            UserId = user.Id,
+            Username = user.Username,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Bio = user.UserProfile?.Bio ?? string.Empty,
+            AvatarUrl = user.UserProfile?.AvatarUrl ?? string.Empty,
+            BannerUrl = user.UserProfile?.BannerUrl ?? string.Empty,
+            CreatorTier = user.UserProfile?.CreatorTier ?? string.Empty,
+            FollowerCount = followerCount,
+            FollowingCount = followingCount,
+            IsFollowing = isFollowing
+        };
+
+        return GenericResult<UserProfileResponse>.Success(response);
+    }
+
+    public async Task<GenericResult<PagedResult<FollowerResponse>>> GetFollowersAsync(int userId, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        if (user == null)
+        {
+            return GenericResult<PagedResult<FollowerResponse>>.Failure("User not found", ErrorType.NotFound);
+        }
+
+        var followers = await _socialRepository.GetFollowersAsync(userId, page, pageSize, cancellationToken);
+        var totalCount = await _socialRepository.GetFollowerCountAsync(userId, cancellationToken);
+
+        var responses = followers.Select(u => new FollowerResponse
+        {
+            UserId = u.Id,
+            Username = u.Username,
+            AvatarUrl = u.UserProfile?.AvatarUrl ?? string.Empty,
+            Bio = u.UserProfile?.Bio ?? string.Empty
+        }).ToList();
+
+        var pagedResult = new PagedResult<FollowerResponse>
+        {
+            Items = responses,
+            PageNumber = page,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
+
+        return GenericResult<PagedResult<FollowerResponse>>.Success(pagedResult);
+    }
+
+    public async Task<GenericResult<PagedResult<FollowerResponse>>> GetFollowingAsync(int userId, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        if (user == null)
+        {
+            return GenericResult<PagedResult<FollowerResponse>>.Failure("User not found", ErrorType.NotFound);
+        }
+
+        var following = await _socialRepository.GetFollowingAsync(userId, page, pageSize, cancellationToken);
+        var totalCount = await _socialRepository.GetFollowingCountAsync(userId, cancellationToken);
+
+        var responses = following.Select(u => new FollowerResponse
+        {
+            UserId = u.Id,
+            Username = u.Username,
+            AvatarUrl = u.UserProfile?.AvatarUrl ?? string.Empty,
+            Bio = u.UserProfile?.Bio ?? string.Empty
+        }).ToList();
+
+        var pagedResult = new PagedResult<FollowerResponse>
+        {
+            Items = responses,
+            PageNumber = page,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
+
+        return GenericResult<PagedResult<FollowerResponse>>.Success(pagedResult);
+    }
+}
