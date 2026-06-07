@@ -91,8 +91,8 @@ if (!string.IsNullOrEmpty(redisConnectionString))
 else
 {
     builder.Services.AddDistributedMemoryCache();
-    builder.Services.AddMemoryCache();
 }
+builder.Services.AddMemoryCache();
 builder.Services.AddSignalR();
 
 builder.Services.AddRateLimiter(options =>
@@ -266,6 +266,10 @@ using (var scope = app.Services.CreateAsyncScope())
             try
             {
                 await dbContext.SeedRolesAsync();
+                await dbContext.SeedTagsAsync();
+                await dbContext.SaveChangesAsync();
+
+                await dbContext.SeedUsersAsync();
                 await dbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
 
