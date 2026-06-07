@@ -6,6 +6,7 @@ using MuseSpace.BLL.Response;
 using MuseSpace.BLL.Services;
 using MuseSpace.Core.Interfaces.Repositories;
 using MuseSpace.BLL.Interfaces.Services;
+using MuseSpace.Core.Interfaces.Helper;
 
 namespace MuseSpace.API.Controllers;
 
@@ -17,12 +18,14 @@ namespace MuseSpace.API.Controllers;
 [Route("api/[controller]")]
 public sealed class AuthController : ControllerBase
 {
-    private const string OtpDisabledMessage = "OTP system is disabled.";
-
     private readonly IAuthService _authService;
     private readonly ITokenService _tokenService;
     private readonly IAuthResponseFactory _authResponseFactory;
     private readonly IUserRepository _userRepository;
+    private readonly IOtpService _otpService;
+    private readonly IEmailService _emailService;
+    private readonly IConfiguration _configuration;
+    private readonly IPasswordHashHelper _passwordHashHelper;
 
     /// <summary>
     /// Constructor for AuthController
@@ -31,19 +34,28 @@ public sealed class AuthController : ControllerBase
     /// <param name="tokenService">Token service for generating and validating JWT tokens</param>
     /// <param name="userRepository">User repository for accessing user data</param>
     /// <param name="authResponseFactory">Factory for building auth responses with tokens and user data</param>
-    /// <remarks>
-    /// The constructor injects the necessary services and repositories required for authentication operations. The IAuthService is responsible for handling the core authentication logic such as registering users and validating credentials. The ITokenService is used for generating JWT access tokens and refresh tokens, as well as validating them. The IUserRepository allows the controller to access user data from the database when needed, such as during OTP generation or verification. This setup follows the dependency injection pattern, promoting loose coupling and easier testing.
-    /// </remarks>
+    /// <param name="otpService">OTP service for generating and verifying one-time passwords</param>
+    /// <param name="emailService">Email service for sending OTP codes</param>
+    /// <param name="configuration">Application configuration</param>
+    /// <param name="passwordHashHelper">Password hashing helper</param>
     public AuthController(
         IAuthService authService,
         ITokenService tokenService,
         IUserRepository userRepository,
-        IAuthResponseFactory authResponseFactory)
+        IAuthResponseFactory authResponseFactory,
+        IOtpService otpService,
+        IEmailService emailService,
+        IConfiguration configuration,
+        IPasswordHashHelper passwordHashHelper)
     {
         _authService = authService;
         _tokenService = tokenService;
         _userRepository = userRepository;
         _authResponseFactory = authResponseFactory;
+        _otpService = otpService;
+        _emailService = emailService;
+        _configuration = configuration;
+        _passwordHashHelper = passwordHashHelper;
     }
 
     /// <summary>
@@ -261,7 +273,8 @@ public sealed class AuthController : ControllerBase
     /// Generate OTP for email verification or password reset.
     /// </summary>
     /// <remarks>
-    /// OTP is currently disabled. The legacy implementation is preserved in comments for future reactivation.
+    /// Generates a one-time password and sends it to the user's email address.
+    /// Supports both email verification and forgot password purposes.
     /// </remarks>
     [HttpPost("otp/generate")]
     [AllowAnonymous]
@@ -271,7 +284,6 @@ public sealed class AuthController : ControllerBase
         [FromBody] OtpGenerateRequest request,
         CancellationToken cancellationToken = default)
     {
-        /*
         var featureKey = request.Purpose switch
         {
             "EmailVerification" => "Features:OtpEmailVerification:Enabled",
@@ -296,18 +308,18 @@ public sealed class AuthController : ControllerBase
 
         var otp = await _otpService.GenerateOtpAsync(user.Id, request.Purpose, cancellationToken);
 
+        var emailBody = BuildOtpEmailBody(otp.Code, 15);
+        await _emailService.SendEmailAsync(
+            request.Email,
+            "Muse Space - Your Verification Code",
+            emailBody,
+            cancellationToken);
+
         return Ok(new OtpGenerateResponse
         {
             Success = true,
             Message = $"OTP sent to {request.Email}",
             ExpiresIn = "15 minutes"
-        });
-        */
-
-        return StatusCode(StatusCodes.Status503ServiceUnavailable, new OtpGenerateResponse
-        {
-            Success = false,
-            Message = OtpDisabledMessage
         });
     }
 
@@ -315,7 +327,8 @@ public sealed class AuthController : ControllerBase
     /// Verify OTP for email verification
     /// </summary>
     /// <remarks>
-    /// OTP verification is currently disabled. The legacy implementation is preserved in comments for future reactivation.
+    /// Verifies the one-time password submitted by the user for email verification.
+    /// On success, marks the user's email as verified.
     /// </remarks>
     [HttpPost("otp/verify-email")]
     [AllowAnonymous]
@@ -325,7 +338,6 @@ public sealed class AuthController : ControllerBase
         [FromBody] OtpVerifyRequest request,
         CancellationToken cancellationToken = default)
     {
-        /*
         if (!_configuration.GetValue<bool>("Features:OtpEmailVerification:Enabled"))
             return BadRequest(new OtpVerifyResponse
             {
@@ -350,7 +362,6 @@ public sealed class AuthController : ControllerBase
         if (!success)
             return BadRequest(new OtpVerifyResponse { Success = false, Message = message });
 
-        // Mark email as verified
         user.IsEmailVerified = true;
         user.EmailVerifiedAtUtc = DateTime.UtcNow;
         await _userRepository.UpdateAsync(user, cancellationToken);
@@ -360,20 +371,14 @@ public sealed class AuthController : ControllerBase
             Success = true,
             Message = "Email verified successfully"
         });
-        */
-
-        return StatusCode(StatusCodes.Status503ServiceUnavailable, new OtpVerifyResponse
-        {
-            Success = false,
-            Message = OtpDisabledMessage
-        });
     }
 
     /// <summary>
     /// Request password reset OTP
     /// </summary>
     /// <remarks>
-    /// Password reset via OTP is currently disabled. The legacy implementation is preserved in comments for future reactivation.
+    /// Generates a one-time password for password reset and sends it to the user's email.
+    /// Returns a generic success message regardless of whether the email exists to prevent enumeration.
     /// </remarks>
     [HttpPost("forgot-password")]
     [AllowAnonymous]
@@ -383,7 +388,6 @@ public sealed class AuthController : ControllerBase
         [FromBody] ForgotPasswordRequest request,
         CancellationToken cancellationToken = default)
     {
-        /*
         if (!_configuration.GetValue<bool>("Features:OtpForgotPassword:Enabled"))
             return BadRequest(new OtpGenerateResponse
             {
@@ -400,7 +404,14 @@ public sealed class AuthController : ControllerBase
                 ExpiresIn = "30 minutes"
             });
 
-        await _otpService.GenerateOtpAsync(user.Id, "ForgotPassword", cancellationToken);
+        var otp = await _otpService.GenerateOtpAsync(user.Id, "ForgotPassword", cancellationToken);
+
+        var emailBody = BuildOtpEmailBody(otp.Code, 30);
+        await _emailService.SendEmailAsync(
+            request.Email,
+            "Muse Space - Password Reset Code",
+            emailBody,
+            cancellationToken);
 
         return Ok(new OtpGenerateResponse
         {
@@ -408,20 +419,14 @@ public sealed class AuthController : ControllerBase
             Message = "Password reset OTP sent to your email",
             ExpiresIn = "30 minutes"
         });
-        */
-
-        return StatusCode(StatusCodes.Status503ServiceUnavailable, new OtpGenerateResponse
-        {
-            Success = false,
-            Message = OtpDisabledMessage
-        });
     }
 
     /// <summary>
     /// Reset password using OTP
     /// </summary>
     /// <remarks>
-    /// Password reset via OTP is currently disabled. The legacy implementation is preserved in comments for future reactivation.
+    /// Resets the user's password after verifying the OTP code.
+    /// Invalidates any existing refresh tokens on success.
     /// </remarks>
     [HttpPost("reset-password")]
     [AllowAnonymous]
@@ -431,7 +436,6 @@ public sealed class AuthController : ControllerBase
         [FromBody] ResetPasswordRequest request,
         CancellationToken cancellationToken = default)
     {
-        /*
         if (!_configuration.GetValue<bool>("Features:OtpForgotPassword:Enabled"))
             return BadRequest(new AuthResponse
             {
@@ -474,9 +478,7 @@ public sealed class AuthController : ControllerBase
                 Message = message
             });
 
-        // Update password
-        var passwordHasher = HttpContext.RequestServices.GetRequiredService<IPasswordHasher>();
-        user.PasswordHash = passwordHasher.HashPassword(request.NewPassword);
+        user.PasswordHash = _passwordHashHelper.HashPassword(request.NewPassword);
         user.RefreshToken = null;
         user.RefreshTokenExpiryUtc = null;
         await _userRepository.UpdateAsync(user, cancellationToken);
@@ -486,12 +488,17 @@ public sealed class AuthController : ControllerBase
             Success = true,
             Message = "Password reset successfully"
         });
-        */
+    }
 
-        return StatusCode(StatusCodes.Status503ServiceUnavailable, new AuthResponse
-        {
-            Success = false,
-            Message = OtpDisabledMessage
-        });
+    private static string BuildOtpEmailBody(string code, int expiryMinutes)
+    {
+        return $@"<div style='font-family: sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;'>
+                <h2 style='color: #6366f1;'>Muse Space</h2>
+                <p>Your verification code is:</p>
+                <div style='background: #f1f5f9; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0;'>
+                    <span style='font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #1e293b;'>{code}</span>
+                </div>
+                <p style='color: #64748b; font-size: 14px;'>This code expires in {expiryMinutes} minutes. Do not share it with anyone.</p>
+            </div>";
     }
 }
