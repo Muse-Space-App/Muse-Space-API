@@ -35,6 +35,7 @@ public class SearchController : ControllerBase
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Unified search results</returns>
     [HttpGet]
+    [AllowAnonymous]
     [EnableRateLimiting("fixed")]
     [ProducesResponseType(typeof(GenericResult<SearchResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Search([FromQuery] string query, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)

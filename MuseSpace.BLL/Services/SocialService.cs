@@ -79,7 +79,8 @@ public class SocialService : ISocialService
             CreatorTier = user.UserProfile?.CreatorTier ?? string.Empty,
             FollowerCount = followerCount,
             FollowingCount = followingCount,
-            IsFollowing = isFollowing
+            IsFollowing = isFollowing,
+            IsAcceptingCommissions = user.UserProfile?.IsAcceptingCommissions ?? false
         };
 
         return GenericResult<UserProfileResponse>.Success(response);
@@ -143,5 +144,24 @@ public class SocialService : ISocialService
         };
 
         return GenericResult<PagedResult<FollowerResponse>>.Success(pagedResult);
+    }
+
+    public async Task<GenericResult<bool>> ToggleAcceptingCommissionsAsync(int userId, bool isAccepting, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        if (user == null || user.UserProfile == null)
+        {
+            return GenericResult<bool>.Failure("User profile not found", ErrorType.NotFound);
+        }
+
+        if (isAccepting && user.UserProfile.ArtworkCount < 5)
+        {
+            return GenericResult<bool>.Failure("You must post at least 5 artworks before you can accept commissions.", ErrorType.ValidationFailed);
+        }
+
+        user.UserProfile.IsAcceptingCommissions = isAccepting;
+        await _userRepository.UpdateAsync(user, cancellationToken);
+
+        return GenericResult<bool>.Success(isAccepting, isAccepting ? "You are now accepting commissions." : "You are no longer accepting commissions.");
     }
 }
