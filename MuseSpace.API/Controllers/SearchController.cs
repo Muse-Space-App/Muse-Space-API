@@ -37,7 +37,7 @@ public class SearchController : ControllerBase
     [HttpGet]
     [AllowAnonymous]
     [ProducesResponseType(typeof(GenericResult<SearchResponse>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> Search([FromQuery] string query, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Search([FromQuery] string? query = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
     {
         var result = await _searchService.SearchAsync(query, page, pageSize, cancellationToken);
         if (!result.IsSuccess) return BadRequest(result);

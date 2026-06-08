@@ -30,7 +30,7 @@ public class SearchService : ISearchService
         _dbContext = dbContext;
     }
 
-    public async Task<GenericResult<SearchResponse>> SearchAsync(string query, int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<GenericResult<SearchResponse>> SearchAsync(string? query, int page, int pageSize, CancellationToken cancellationToken = default)
     {
         if (query == null)
         {
