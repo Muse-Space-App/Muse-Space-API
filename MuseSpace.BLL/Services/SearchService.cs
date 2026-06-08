@@ -32,9 +32,9 @@ public class SearchService : ISearchService
 
     public async Task<GenericResult<SearchResponse>> SearchAsync(string query, int page, int pageSize, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(query))
+        if (query == null)
         {
-            return GenericResult<SearchResponse>.Failure("Query cannot be empty", ErrorType.ValidationFailed);
+            query = string.Empty;
         }
 
         int skip = (page - 1) * pageSize;
