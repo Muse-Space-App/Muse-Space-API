@@ -235,29 +235,27 @@ public static class SeedData
     {
         if (await context.Artwork.AnyAsync())
         {
-            var unsplashArtworks = await context.Artwork.Where(a => a.ContentUrl.Contains("images.unsplash.com")).ToListAsync();
+            var cloudinaryArtworks = await context.Artwork.Where(a => a.ContentUrl.Contains("cloudinary.com")).ToListAsync();
             bool updated = false;
-            foreach (var a in unsplashArtworks)
+            foreach (var a in cloudinaryArtworks)
             {
-                if (!a.ContentUrl.Contains("cloudinary"))
+                int index = a.ContentUrl.IndexOf("https://images.unsplash.com");
+                if (index > 0)
                 {
-                    a.ContentUrl = $"https://res.cloudinary.com/dzpv8dz7e/image/fetch/f_auto,q_auto,w_{a.Width},h_{a.Height},c_fill/{a.ContentUrl}";
+                    a.ContentUrl = a.ContentUrl.Substring(index);
                     updated = true;
                 }
-                if (a.ThumbnailUrl != null && a.ThumbnailUrl.Contains("images.unsplash.com") && !a.ThumbnailUrl.Contains("cloudinary"))
+                int thumbIndex = a.ThumbnailUrl?.IndexOf("https://images.unsplash.com") ?? -1;
+                if (thumbIndex > 0)
                 {
-                    a.ThumbnailUrl = $"https://res.cloudinary.com/dzpv8dz7e/image/fetch/f_auto,q_auto,w_400,c_fill/{a.ThumbnailUrl}";
+                    a.ThumbnailUrl = a.ThumbnailUrl.Substring(thumbIndex);
                     updated = true;
                 }
             }
             if (updated)
             {
                 await context.SaveChangesAsync();
-                Console.WriteLine($"Migrated Unsplash artworks to Cloudinary fetch URLs.");
-            }
-            else
-            {
-                Console.WriteLine("Artworks already exist in the database and use Cloudinary.");
+                Console.WriteLine($"Reverted Cloudinary artworks to Unsplash URLs.");
             }
             return;
         }
@@ -297,8 +295,8 @@ public static class SeedData
                 CreatorId = users[seed.UserIdx % users.Count].Id,
                 Title = seed.Title,
                 Description = seed.Desc,
-                ContentUrl = $"https://res.cloudinary.com/dzpv8dz7e/image/fetch/f_auto,q_auto,w_{seed.W},h_{seed.H},c_fill/{seed.Url}",
-                ThumbnailUrl = $"https://res.cloudinary.com/dzpv8dz7e/image/fetch/f_auto,q_auto,w_400,c_fill/{seed.Thumb}",
+                ContentUrl = seed.Url,
+                ThumbnailUrl = seed.Thumb,
                 MediaType = "Image",
                 Width = seed.W,
                 Height = seed.H,
