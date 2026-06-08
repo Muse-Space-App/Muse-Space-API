@@ -129,7 +129,9 @@ public static class SeedData
                 FirstName = "Admin",
                 LastName = "System",
                 RoleId = 1,
-                Bio = "MuseSpace platform administrator"
+                Bio = "MuseSpace platform administrator",
+                Avatar = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400",
+                IsAcceptingCommissions = false
             },
             new
             {
@@ -138,7 +140,9 @@ public static class SeedData
                 FirstName = "Luna",
                 LastName = "Chen",
                 RoleId = 2,
-                Bio = "Digital artist and illustrator passionate about fantasy worlds"
+                Bio = "Digital artist and illustrator passionate about fantasy worlds",
+                Avatar = "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400",
+                IsAcceptingCommissions = true
             },
             new
             {
@@ -147,7 +151,9 @@ public static class SeedData
                 FirstName = "Alex",
                 LastName = "Rivera",
                 RoleId = 2,
-                Bio = "Pixel art enthusiast and retro game designer"
+                Bio = "Pixel art enthusiast and retro game designer",
+                Avatar = "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400",
+                IsAcceptingCommissions = true
             },
             new
             {
@@ -156,7 +162,9 @@ public static class SeedData
                 FirstName = "Maya",
                 LastName = "Johnson",
                 RoleId = 2,
-                Bio = "Traditional and watercolor artist exploring mixed media"
+                Bio = "Traditional and watercolor artist exploring mixed media",
+                Avatar = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400",
+                IsAcceptingCommissions = false
             }
         };
 
@@ -198,8 +206,9 @@ public static class SeedData
                     {
                         UserId = user.Id,
                         Bio = seedUser.Bio,
-                        AvatarUrl = null,
-                        BannerUrl = null,
+                        AvatarUrl = seedUser.Email == "admin@yurisoft.com" ? "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400" : seedUser.GetType().GetProperty("Avatar")?.GetValue(seedUser)?.ToString(),
+                        BannerUrl = "https://images.unsplash.com/photo-1557683316-973673baf926?w=1200",
+                        IsAcceptingCommissions = seedUser.Email != "admin@yurisoft.com" && (bool)(seedUser.GetType().GetProperty("IsAcceptingCommissions")?.GetValue(seedUser) ?? false),
                         CreatedAtUtc = DateTime.UtcNow,
                         CreatedBy = "System.SeedData"
                     });
@@ -322,9 +331,9 @@ public static class SeedData
         {
             var groups = new[]
             {
-                new Group { Name = "Digital Art Collective", Description = "A community for digital artists to share techniques, feedback, and inspiration.", CreatorId = users[0].Id, IsPrivate = false, CreatedAtUtc = DateTime.UtcNow.AddDays(-20), CreatedBy = "System.SeedData" },
-                new Group { Name = "Photography Enthusiasts", Description = "Share your best shots and learn from fellow photographers.", CreatorId = users[1].Id, IsPrivate = false, CreatedAtUtc = DateTime.UtcNow.AddDays(-15), CreatedBy = "System.SeedData" },
-                new Group { Name = "Watercolor Workshop", Description = "Weekly watercolor challenges and painting tips.", CreatorId = users[2 % users.Count].Id, IsPrivate = false, CreatedAtUtc = DateTime.UtcNow.AddDays(-10), CreatedBy = "System.SeedData" },
+                new Group { Name = "Digital Art Collective", Description = "A community for digital artists to share techniques, feedback, and inspiration.", CreatorId = users[0].Id, IsPrivate = false, AvatarUrl = "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=400", BannerUrl = "https://images.unsplash.com/photo-1550684376-efcbd6e3f031?w=1200", CreatedAtUtc = DateTime.UtcNow.AddDays(-20), CreatedBy = "System.SeedData" },
+                new Group { Name = "Photography Enthusiasts", Description = "Share your best shots and learn from fellow photographers.", CreatorId = users[1].Id, IsPrivate = false, AvatarUrl = "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=400", BannerUrl = "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=1200", CreatedAtUtc = DateTime.UtcNow.AddDays(-15), CreatedBy = "System.SeedData" },
+                new Group { Name = "Watercolor Workshop", Description = "Weekly watercolor challenges and painting tips.", CreatorId = users[2 % users.Count].Id, IsPrivate = false, AvatarUrl = "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=400", BannerUrl = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200", CreatedAtUtc = DateTime.UtcNow.AddDays(-10), CreatedBy = "System.SeedData" },
             };
 
             await context.Groups.AddRangeAsync(groups);
@@ -370,4 +379,123 @@ public static class SeedData
         name.ToLowerInvariant()
             .Replace(" ", "-")
             .Replace("_", "-");
+
+    public static async Task SeedGroupPostsAsync(this MuseSpaceDbContext context)
+    {
+        if (await context.GroupPosts.AnyAsync()) return;
+
+        var groups = await context.Groups.ToListAsync();
+        if (!groups.Any()) return;
+
+        var members = await context.GroupMembers.ToListAsync();
+
+        var postsToAdd = new List<GroupPost>();
+        foreach (var group in groups)
+        {
+            var groupMembers = members.Where(m => m.GroupId == group.Id).ToList();
+            if (!groupMembers.Any()) continue;
+
+            for (int i = 0; i < 3; i++)
+            {
+                var randomMember = groupMembers[Random.Shared.Next(groupMembers.Count)];
+                postsToAdd.Add(new GroupPost
+                {
+                    GroupId = group.Id,
+                    AuthorId = randomMember.UserId,
+                    Content = i == 0 ? $"Hello everyone! Welcome to {group.Name}. Feel free to share your works here!" : $"Just finished a new piece. Wanted to share it with this amazing group.",
+                    CreatedAtUtc = DateTime.UtcNow.AddDays(-Random.Shared.Next(1, 10)),
+                    CreatedBy = "System.SeedData"
+                });
+            }
+        }
+
+        await context.GroupPosts.AddRangeAsync(postsToAdd);
+        await context.SaveChangesAsync();
+        Console.WriteLine($"Seeded {postsToAdd.Count} group posts");
+    }
+
+    public static async Task SeedCommissionsAsync(this MuseSpaceDbContext context)
+    {
+        if (await context.Commissions.AnyAsync()) return;
+
+        var artists = await context.Users.Where(u => u.Email == "artist1@yurisoft.com" || u.Email == "artist2@yurisoft.com").ToListAsync();
+        var requesters = await context.Users.Where(u => u.Email == "admin@yurisoft.com" || u.Email == "artist3@yurisoft.com").ToListAsync();
+
+        if (!artists.Any() || !requesters.Any()) return;
+
+        var commissionsToAdd = new List<Commission>();
+        var messagesToAdd = new List<CommissionMessage>();
+
+        // Pending Commission
+        var pendingComm = new Commission
+        {
+            ArtistId = artists[0].Id,
+            RequesterId = requesters[0].Id,
+            Title = "Custom Profile Portrait",
+            Description = "I would like a digital portrait in your signature style for my social media profiles.",
+            Price = 120.00m,
+            Status = MuseSpace.Core.Enums.CommissionStatus.Pending,
+            DeadlineUtc = DateTime.UtcNow.AddDays(14),
+            CreatedAtUtc = DateTime.UtcNow.AddDays(-2),
+            CreatedBy = "System.SeedData"
+        };
+        commissionsToAdd.Add(pendingComm);
+
+        // InProgress Commission
+        var inProgressComm = new Commission
+        {
+            ArtistId = artists[0].Id,
+            RequesterId = requesters[1 % requesters.Count].Id,
+            Title = "Fantasy Landscape Background",
+            Description = "Need a background for my new game featuring a magical forest.",
+            Price = 300.00m,
+            Status = MuseSpace.Core.Enums.CommissionStatus.InProgress,
+            DeadlineUtc = DateTime.UtcNow.AddDays(30),
+            CreatedAtUtc = DateTime.UtcNow.AddDays(-5),
+            CreatedBy = "System.SeedData"
+        };
+        commissionsToAdd.Add(inProgressComm);
+
+        // Completed Commission
+        var completedComm = new Commission
+        {
+            ArtistId = artists[1 % artists.Count].Id,
+            RequesterId = requesters[0].Id,
+            Title = "Pixel Art Character Sprite",
+            Description = "Idle animation sprite for a retro-style RPG character.",
+            Price = 80.00m,
+            Status = MuseSpace.Core.Enums.CommissionStatus.Completed,
+            DeadlineUtc = DateTime.UtcNow.AddDays(-1),
+            CompletedAtUtc = DateTime.UtcNow.AddDays(-2),
+            CreatedAtUtc = DateTime.UtcNow.AddDays(-10),
+            CreatedBy = "System.SeedData"
+        };
+        commissionsToAdd.Add(completedComm);
+
+        await context.Commissions.AddRangeAsync(commissionsToAdd);
+        await context.SaveChangesAsync();
+
+        // Add some messages to the InProgress commission
+        messagesToAdd.Add(new CommissionMessage
+        {
+            CommissionId = inProgressComm.Id,
+            SenderId = inProgressComm.RequesterId,
+            Content = "Hi! I really love your fantasy landscapes. Are you available for a new commission?",
+            CreatedAtUtc = inProgressComm.CreatedAtUtc.AddHours(1),
+            CreatedBy = "System.SeedData"
+        });
+        messagesToAdd.Add(new CommissionMessage
+        {
+            CommissionId = inProgressComm.Id,
+            SenderId = inProgressComm.ArtistId,
+            Content = "Hello! Yes, I am. A magical forest sounds like a fun project. Do you have any specific color palettes in mind?",
+            CreatedAtUtc = inProgressComm.CreatedAtUtc.AddHours(2),
+            CreatedBy = "System.SeedData"
+        });
+
+        await context.CommissionMessages.AddRangeAsync(messagesToAdd);
+        await context.SaveChangesAsync();
+
+        Console.WriteLine($"Seeded {commissionsToAdd.Count} commissions and {messagesToAdd.Count} messages");
+    }
 }

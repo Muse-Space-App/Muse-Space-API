@@ -271,6 +271,8 @@ using (var scope = app.Services.CreateAsyncScope())
                 
                 await dbContext.SeedGroupsAndEventsAsync();
                 await dbContext.SeedArtworksAsync();
+                await dbContext.SeedGroupPostsAsync();
+                await dbContext.SeedCommissionsAsync();
                 await dbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
 
