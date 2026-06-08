@@ -235,7 +235,30 @@ public static class SeedData
     {
         if (await context.Artwork.AnyAsync())
         {
-            Console.WriteLine("Artworks already exist in the database");
+            var unsplashArtworks = await context.Artwork.Where(a => a.ContentUrl.Contains("images.unsplash.com")).ToListAsync();
+            bool updated = false;
+            foreach (var a in unsplashArtworks)
+            {
+                if (!a.ContentUrl.Contains("cloudinary"))
+                {
+                    a.ContentUrl = $"https://res.cloudinary.com/dzpv8dz7e/image/fetch/f_auto,q_auto,w_{a.Width},h_{a.Height},c_fill/{a.ContentUrl}";
+                    updated = true;
+                }
+                if (a.ThumbnailUrl != null && a.ThumbnailUrl.Contains("images.unsplash.com") && !a.ThumbnailUrl.Contains("cloudinary"))
+                {
+                    a.ThumbnailUrl = $"https://res.cloudinary.com/dzpv8dz7e/image/fetch/f_auto,q_auto,w_400,c_fill/{a.ThumbnailUrl}";
+                    updated = true;
+                }
+            }
+            if (updated)
+            {
+                await context.SaveChangesAsync();
+                Console.WriteLine($"Migrated Unsplash artworks to Cloudinary fetch URLs.");
+            }
+            else
+            {
+                Console.WriteLine("Artworks already exist in the database and use Cloudinary.");
+            }
             return;
         }
 
@@ -274,8 +297,8 @@ public static class SeedData
                 CreatorId = users[seed.UserIdx % users.Count].Id,
                 Title = seed.Title,
                 Description = seed.Desc,
-                ContentUrl = seed.Url,
-                ThumbnailUrl = seed.Thumb,
+                ContentUrl = $"https://res.cloudinary.com/dzpv8dz7e/image/fetch/f_auto,q_auto,w_{seed.W},h_{seed.H},c_fill/{seed.Url}",
+                ThumbnailUrl = $"https://res.cloudinary.com/dzpv8dz7e/image/fetch/f_auto,q_auto,w_400,c_fill/{seed.Thumb}",
                 MediaType = "Image",
                 Width = seed.W,
                 Height = seed.H,
