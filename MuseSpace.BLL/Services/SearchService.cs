@@ -39,16 +39,9 @@ public class SearchService : ISearchService
 
         int skip = (page - 1) * pageSize;
 
-        // Perform parallel searches
-        var artworksTask = _artworkRepository.SearchAsync(query, skip, pageSize, cancellationToken);
-        var usersTask = _userRepository.SearchAsync(query, skip, pageSize, cancellationToken);
-        var tagsTask = _tagRepository.SearchAsync(query, skip, pageSize, cancellationToken);
-
-        await Task.WhenAll(artworksTask, usersTask, tagsTask);
-
-        var artworks = await artworksTask;
-        var users = await usersTask;
-        var tags = await tagsTask;
+        var artworks = await _artworkRepository.SearchAsync(query, skip, pageSize, cancellationToken);
+        var users = await _userRepository.SearchAsync(query, skip, pageSize, cancellationToken);
+        var tags = await _tagRepository.SearchAsync(query, skip, pageSize, cancellationToken);
 
         var response = new SearchResponse
         {
