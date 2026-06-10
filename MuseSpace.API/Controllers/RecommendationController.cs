@@ -42,14 +42,15 @@ public class RecommendationController : ControllerBase
     /// Gets similar artworks based on the target artwork.
     /// </summary>
     /// <param name="artworkId">Target artwork ID</param>
-    /// <param name="limit">Max results</param>
+    /// <param name="page">The page number</param>
+    /// <param name="pageSize">The number of items per page</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Similar artworks</returns>
     [HttpGet("similar/{artworkId}")]
-    [ProducesResponseType(typeof(GenericResult<IReadOnlyCollection<ArtworkResponse>>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetSimilarArtworks(int artworkId, [FromQuery] int limit = 10, CancellationToken cancellationToken = default)
+    [ProducesResponseType(typeof(GenericResult<PagedResult<ArtworkResponse>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetSimilarArtworks(int artworkId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
     {
-        var result = await _recommendationService.GetSimilarArtworksAsync(artworkId, limit, cancellationToken);
+        var result = await _recommendationService.GetSimilarArtworksAsync(artworkId, page, pageSize, cancellationToken);
         if (!result.IsSuccess) return BadRequest(result);
         return Ok(result);
     }

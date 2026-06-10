@@ -13,12 +13,14 @@ public class SocialService : ISocialService
     private readonly ISocialRepository _socialRepository;
     private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
+    private readonly INotificationService _notificationService;
 
-    public SocialService(ISocialRepository socialRepository, IUserRepository userRepository, IMapper mapper)
+    public SocialService(ISocialRepository socialRepository, IUserRepository userRepository, IMapper mapper, INotificationService notificationService)
     {
         _socialRepository = socialRepository;
         _userRepository = userRepository;
         _mapper = mapper;
+        _notificationService = notificationService;
     }
 
     public async Task<GenericResult<bool>> ToggleFollowAsync(int followerId, int followingId, CancellationToken cancellationToken = default)
@@ -46,6 +48,18 @@ public class SocialService : ISocialService
         {
             var follow = new Follow { FollowerId = followerId, FollowingId = followingId };
             await _socialRepository.AddFollowAsync(follow, cancellationToken);
+
+            // Trigger Notification
+            await _notificationService.CreateNotificationAsync(
+                followingId,
+                "Follow",
+                "Someone started following you.",
+                $"/profile", // We can point to the follower's profile if we had their username, but this suffices.
+                followerId,
+                null,
+                cancellationToken
+            );
+
             return GenericResult<bool>.Success(true, "Followed successfully");
         }
     }

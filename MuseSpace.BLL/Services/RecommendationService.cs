@@ -59,51 +59,61 @@ public class RecommendationService : IRecommendationService
         return GenericResult<PagedResult<ArtworkResponse>>.Success(pagedResult);
     }
 
-    public async Task<GenericResult<IReadOnlyCollection<ArtworkResponse>>> GetSimilarArtworksAsync(int artworkId, int limit, CancellationToken cancellationToken = default)
+    public async Task<GenericResult<PagedResult<ArtworkResponse>>> GetSimilarArtworksAsync(int artworkId, int page, int pageSize, CancellationToken cancellationToken = default)
     {
-        var cacheKey = $"similar_artworks_{artworkId}_{limit}";
-        if (_cache.TryGetValue(cacheKey, out IReadOnlyCollection<ArtworkResponse>? cachedResult) && cachedResult != null)
+        var cacheKey = $"similar_artworks_{artworkId}";
+        IReadOnlyCollection<ArtworkResponse>? allSimilar = null;
+
+        if (!_cache.TryGetValue(cacheKey, out allSimilar) || allSimilar == null)
         {
-            return GenericResult<IReadOnlyCollection<ArtworkResponse>>.Success(cachedResult);
+            var targetArtwork = await _artworkRepository.GetByIdWithTagsAsync(artworkId, cancellationToken);
+            if (targetArtwork == null)
+                return GenericResult<PagedResult<ArtworkResponse>>.Failure("Artwork not found", Core.Enums.ErrorType.NotFound);
+
+            var targetTags = targetArtwork.ArtworkTags.Select(at => at.TagId).ToList();
+
+            // Fetch candidates (e.g., up to 200 recent artworks) to score against
+            var candidates = await _artworkRepository.GetFeedAsync(null, 200, cancellationToken);
+            var filteredCandidates = candidates.Where(a => a.Id != artworkId).ToList();
+
+            var targetTitleWords = ExtractKeywords(targetArtwork.Title);
+            var targetDescWords = ExtractKeywords(targetArtwork.Description);
+            var targetAiDescWords = ExtractKeywords(targetArtwork.AiDescription);
+
+            var scoredCandidates = filteredCandidates.Select(candidate =>
+            {
+                int score = 0;
+
+                var candidateTags = candidate.ArtworkTags.Select(at => at.TagId).ToList();
+                score += candidateTags.Intersect(targetTags).Count() * 3;
+
+                score += ExtractKeywords(candidate.Title).Intersect(targetTitleWords).Count() * 2;
+                score += ExtractKeywords(candidate.Description).Intersect(targetDescWords).Count() * 1;
+                score += ExtractKeywords(candidate.AiDescription).Intersect(targetAiDescWords).Count() * 1;
+
+                return new { Artwork = candidate, Score = score };
+            })
+            .Where(x => x.Score > 0)
+            .OrderByDescending(x => x.Score)
+            .Select(x => x.Artwork)
+            .ToList();
+
+            allSimilar = _mapper.Map<IReadOnlyCollection<ArtworkResponse>>(scoredCandidates);
+            _cache.Set(cacheKey, allSimilar, TimeSpan.FromMinutes(10));
         }
 
-        var targetArtwork = await _artworkRepository.GetByIdWithTagsAsync(artworkId, cancellationToken);
-        if (targetArtwork == null)
-            return GenericResult<IReadOnlyCollection<ArtworkResponse>>.Failure("Artwork not found", Core.Enums.ErrorType.NotFound);
+        var totalCount = allSimilar.Count;
+        var pagedItems = allSimilar.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
-        var targetTags = targetArtwork.ArtworkTags.Select(at => at.TagId).ToList();
-
-        // Fetch candidates (e.g., up to 100 recent artworks) to score against
-        var candidates = await _artworkRepository.GetFeedAsync(null, 100, cancellationToken);
-        var filteredCandidates = candidates.Where(a => a.Id != artworkId).ToList();
-
-        var targetTitleWords = ExtractKeywords(targetArtwork.Title);
-        var targetDescWords = ExtractKeywords(targetArtwork.Description);
-        var targetAiDescWords = ExtractKeywords(targetArtwork.AiDescription);
-
-        var scoredCandidates = filteredCandidates.Select(candidate =>
+        var pagedResult = new PagedResult<ArtworkResponse>
         {
-            int score = 0;
+            Items = pagedItems,
+            PageNumber = page,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
 
-            var candidateTags = candidate.ArtworkTags.Select(at => at.TagId).ToList();
-            score += candidateTags.Intersect(targetTags).Count() * 3;
-
-            score += ExtractKeywords(candidate.Title).Intersect(targetTitleWords).Count() * 2;
-            score += ExtractKeywords(candidate.Description).Intersect(targetDescWords).Count() * 1;
-            score += ExtractKeywords(candidate.AiDescription).Intersect(targetAiDescWords).Count() * 1;
-
-            return new { Artwork = candidate, Score = score };
-        })
-        .Where(x => x.Score > 0)
-        .OrderByDescending(x => x.Score)
-        .Take(limit)
-        .Select(x => x.Artwork)
-        .ToList();
-
-        var responses = _mapper.Map<IReadOnlyCollection<ArtworkResponse>>(scoredCandidates);
-
-        _cache.Set(cacheKey, responses, TimeSpan.FromMinutes(10));
-        return GenericResult<IReadOnlyCollection<ArtworkResponse>>.Success(responses);
+        return GenericResult<PagedResult<ArtworkResponse>>.Success(pagedResult);
     }
 
     private HashSet<string> ExtractKeywords(string? text)

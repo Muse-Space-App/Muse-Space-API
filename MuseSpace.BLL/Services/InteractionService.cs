@@ -10,11 +10,16 @@ public class InteractionService : IInteractionService
 {
     private readonly IInteractionRepository _interactionRepository;
     private readonly IArtworkRepository _artworkRepository;
+    private readonly INotificationService _notificationService;
 
-    public InteractionService(IInteractionRepository interactionRepository, IArtworkRepository artworkRepository)
+    public InteractionService(
+        IInteractionRepository interactionRepository, 
+        IArtworkRepository artworkRepository,
+        INotificationService notificationService)
     {
         _interactionRepository = interactionRepository;
         _artworkRepository = artworkRepository;
+        _notificationService = notificationService;
     }
 
     public async Task<GenericResult<bool>> ToggleLikeAsync(int artworkId, int userId, CancellationToken cancellationToken = default)
@@ -35,6 +40,21 @@ public class InteractionService : IInteractionService
         else
         {
             await _interactionRepository.AddLikeAsync(new Like { ArtworkId = artworkId, UserId = userId }, cancellationToken);
+            
+            // Trigger Notification
+            if (artwork.CreatorId != userId) // Don't notify self
+            {
+                await _notificationService.CreateNotificationAsync(
+                    artwork.CreatorId,
+                    "Like",
+                    "Someone liked your artwork.",
+                    $"/artwork/{artworkId}",
+                    userId,
+                    artworkId,
+                    cancellationToken
+                );
+            }
+
             return GenericResult<bool>.Success(true, "Artwork liked successfully");
         }
     }

@@ -13,12 +13,14 @@ public class CommentService : ICommentService
     private readonly ICommentRepository _commentRepository;
     private readonly IArtworkRepository _artworkRepository;
     private readonly IMapper _mapper;
+    private readonly INotificationService _notificationService;
 
-    public CommentService(ICommentRepository commentRepository, IArtworkRepository artworkRepository, IMapper mapper)
+    public CommentService(ICommentRepository commentRepository, IArtworkRepository artworkRepository, IMapper mapper, INotificationService notificationService)
     {
         _commentRepository = commentRepository;
         _artworkRepository = artworkRepository;
         _mapper = mapper;
+        _notificationService = notificationService;
     }
 
     public async Task<GenericResult<CommentResponse>> CreateCommentAsync(int artworkId, int userId, CreateCommentRequest request, CancellationToken cancellationToken = default)
@@ -48,6 +50,20 @@ public class CommentService : ICommentService
         };
 
         await _commentRepository.AddAsync(comment, cancellationToken);
+
+        // Trigger Notification
+        if (artwork.CreatorId != userId) // Don't notify self
+        {
+            await _notificationService.CreateNotificationAsync(
+                artwork.CreatorId,
+                "Comment",
+                "Someone commented on your artwork.",
+                $"/artwork/{artworkId}",
+                userId,
+                artworkId,
+                cancellationToken
+            );
+        }
 
         // Ideally fetch full comment with user profile to map properly, but we'll map basic info
         var response = _mapper.Map<CommentResponse>(comment);
