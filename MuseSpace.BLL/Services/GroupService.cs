@@ -72,7 +72,7 @@ public class GroupService : IGroupService
         return GenericResult<GroupResponse>.Success(response, "Group updated successfully");
     }
 
-    public async Task<GenericResult<GroupResponse>> GetGroupAsync(int groupId, CancellationToken cancellationToken = default)
+    public async Task<GenericResult<GroupResponse>> GetGroupAsync(int groupId, int? currentUserId = null, CancellationToken cancellationToken = default)
     {
         var group = await _groupRepository.GetByIdAsync(groupId, cancellationToken);
         if (group == null)
@@ -81,6 +81,10 @@ public class GroupService : IGroupService
         }
 
         var response = _mapper.Map<GroupResponse>(group);
+        if (currentUserId.HasValue)
+        {
+            response.IsMember = await _groupRepository.IsUserInGroupAsync(groupId, currentUserId.Value, cancellationToken);
+        }
         return GenericResult<GroupResponse>.Success(response);
     }
 

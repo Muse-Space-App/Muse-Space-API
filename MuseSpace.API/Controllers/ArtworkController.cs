@@ -63,7 +63,7 @@ public class ArtworkController : ControllerBase
     /// <returns>The artwork details</returns>
     /// <response code="200">Returns the artwork details</response>
     /// <response code="404">Artwork not found</response>
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(GenericResult<ArtworkResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
@@ -147,7 +147,7 @@ public class ArtworkController : ControllerBase
     /// <response code="400">Bad request - invalid input</response>
     /// <response code="403">Forbidden - user is not the creator</response>
     /// <response code="404">Artwork not found</response>
-    [HttpPut("{id}")]
+    [HttpPut("{id:int}")]
     [Authorize]
     [ProducesResponseType(typeof(GenericResult<ArtworkResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateArtworkRequest request, CancellationToken cancellationToken)
@@ -179,7 +179,7 @@ public class ArtworkController : ControllerBase
     /// <response code="400">Bad request</response>
     /// <response code="403">Forbidden - user is not the creator</response>
     /// <response code="404">Artwork not found</response>
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:int}")]
     [Authorize]
     [ProducesResponseType(typeof(GenericResult<bool>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)

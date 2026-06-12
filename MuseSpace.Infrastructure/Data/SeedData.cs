@@ -130,7 +130,7 @@ public static class SeedData
                 LastName = "System",
                 RoleId = 1,
                 Bio = "MuseSpace platform administrator",
-                Avatar = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400",
+                Avatar = "https://res.cloudinary.com/dzjoxcvv7/image/upload/v1/muse-space/w7o3q62z017y6d7y0k4w",
                 IsAcceptingCommissions = false
             },
             new
@@ -141,7 +141,7 @@ public static class SeedData
                 LastName = "Chen",
                 RoleId = 2,
                 Bio = "Digital artist and illustrator passionate about fantasy worlds",
-                Avatar = "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400",
+                Avatar = "https://res.cloudinary.com/dzjoxcvv7/image/upload/v1/muse-space/w7o3q62z017y6d7y0k4w",
                 IsAcceptingCommissions = true
             },
             new
@@ -152,7 +152,7 @@ public static class SeedData
                 LastName = "Rivera",
                 RoleId = 2,
                 Bio = "Pixel art enthusiast and retro game designer",
-                Avatar = "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400",
+                Avatar = "https://res.cloudinary.com/dzjoxcvv7/image/upload/v1/muse-space/w7o3q62z017y6d7y0k4w",
                 IsAcceptingCommissions = true
             },
             new
@@ -163,7 +163,7 @@ public static class SeedData
                 LastName = "Johnson",
                 RoleId = 2,
                 Bio = "Traditional and watercolor artist exploring mixed media",
-                Avatar = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400",
+                Avatar = "https://res.cloudinary.com/dzjoxcvv7/image/upload/v1/muse-space/w7o3q62z017y6d7y0k4w",
                 IsAcceptingCommissions = false
             }
         };
@@ -206,8 +206,8 @@ public static class SeedData
                     {
                         UserId = user.Id,
                         Bio = seedUser.Bio,
-                        AvatarUrl = seedUser.Email == "admin@yurisoft.com" ? "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400" : seedUser.GetType().GetProperty("Avatar")?.GetValue(seedUser)?.ToString(),
-                        BannerUrl = "https://images.unsplash.com/photo-1557683316-973673baf926?w=1200",
+                        AvatarUrl = seedUser.Email == "admin@yurisoft.com" ? "https://res.cloudinary.com/dzjoxcvv7/image/upload/v1/muse-space/w7o3q62z017y6d7y0k4w" : seedUser.GetType().GetProperty("Avatar")?.GetValue(seedUser)?.ToString(),
+                        BannerUrl = "https://res.cloudinary.com/dzjoxcvv7/image/upload/v1/muse-space/w7o3q62z017y6d7y0k4w",
                         IsAcceptingCommissions = seedUser.Email != "admin@yurisoft.com" && (bool)(seedUser.GetType().GetProperty("IsAcceptingCommissions")?.GetValue(seedUser) ?? false),
                         CreatedAtUtc = DateTime.UtcNow,
                         CreatedBy = "System.SeedData"
@@ -235,28 +235,6 @@ public static class SeedData
     {
         if (await context.Artwork.AnyAsync())
         {
-            var cloudinaryArtworks = await context.Artwork.Where(a => a.ContentUrl.Contains("cloudinary.com")).ToListAsync();
-            bool updated = false;
-            foreach (var a in cloudinaryArtworks)
-            {
-                int index = a.ContentUrl.IndexOf("https://images.unsplash.com");
-                if (index > 0)
-                {
-                    a.ContentUrl = a.ContentUrl.Substring(index);
-                    updated = true;
-                }
-                int thumbIndex = a.ThumbnailUrl?.IndexOf("https://images.unsplash.com") ?? -1;
-                if (thumbIndex > 0)
-                {
-                    a.ThumbnailUrl = a.ThumbnailUrl.Substring(thumbIndex);
-                    updated = true;
-                }
-            }
-            if (updated)
-            {
-                await context.SaveChangesAsync();
-                Console.WriteLine($"Reverted Cloudinary artworks to Unsplash URLs.");
-            }
             return;
         }
 
@@ -278,7 +256,7 @@ public static class SeedData
             new { Title = "Portrait in Natural Light", Desc = "Soft natural light creating a warm, intimate portrait.", Url = "https://res.cloudinary.com/dzpv8dz7e/image/upload/v1780888551/nh2ei6llaaqssnbmnxuq.jpg", Thumb = "https://res.cloudinary.com/dzpv8dz7e/image/upload/w_400,c_fill/v1780888551/nh2ei6llaaqssnbmnxuq.jpg", UserIdx = 1, TagNames = new[] { "Portrait", "Photography" }, W = 1200, H = 900 },
             new { Title = "Cosmic Nebula Dreams", Desc = "Deep space imagery revealing the beauty of distant nebulae.", Url = "https://res.cloudinary.com/dzpv8dz7e/image/upload/v1780888553/f3raz9qas3oxsa3u6fqg.jpg", Thumb = "https://res.cloudinary.com/dzpv8dz7e/image/upload/w_400,c_fill/v1780888553/f3raz9qas3oxsa3u6fqg.jpg", UserIdx = 2, TagNames = new[] { "Digital Art", "Abstract" }, W = 1200, H = 800 },
             new { Title = "Vintage Film Tones", Desc = "A nostalgic scene captured with warm vintage film aesthetics.", Url = "https://res.cloudinary.com/dzpv8dz7e/image/upload/v1780888554/yflm4rxglcs6irf6y4he.jpg", Thumb = "https://res.cloudinary.com/dzpv8dz7e/image/upload/w_400,c_fill/v1780888554/yflm4rxglcs6irf6y4he.jpg", UserIdx = 0, TagNames = new[] { "Photography", "Illustration" }, W = 1200, H = 800 },
-            new { Title = "Watercolor Botanicals", Desc = "Delicate floral studies rendered in soft watercolor washes.", Url = "https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=1200", Thumb = "https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=400", UserIdx = 1, TagNames = new[] { "Watercolor", "Illustration" }, W = 1200, H = 900 },
+            new { Title = "Watercolor Botanicals", Desc = "Delicate floral studies rendered in soft watercolor washes.", Url = "https://res.cloudinary.com/dzpv8dz7e/image/upload/v1780888555/yu0c9udhpfw2lzf2bvza.jpg", Thumb = "https://res.cloudinary.com/dzpv8dz7e/image/upload/w_400,c_fill/v1780888555/yu0c9udhpfw2lzf2bvza.jpg", UserIdx = 1, TagNames = new[] { "Watercolor", "Illustration" }, W = 1200, H = 900 },
             new { Title = "Urban Architecture Lines", Desc = "Bold geometric patterns found in modern urban architecture.", Url = "https://res.cloudinary.com/dzpv8dz7e/image/upload/v1780888555/yu0c9udhpfw2lzf2bvza.jpg", Thumb = "https://res.cloudinary.com/dzpv8dz7e/image/upload/w_400,c_fill/v1780888555/yu0c9udhpfw2lzf2bvza.jpg", UserIdx = 2, TagNames = new[] { "Photography", "Abstract" }, W = 1200, H = 800 },
             new { Title = "Ocean Depths", Desc = "Mysterious deep blue ocean waves crashing against rocks.", Url = "https://res.cloudinary.com/dzpv8dz7e/image/upload/v1780888556/mt6dah1jsw2xtishupvf.jpg", Thumb = "https://res.cloudinary.com/dzpv8dz7e/image/upload/w_400,c_fill/v1780888556/mt6dah1jsw2xtishupvf.jpg", UserIdx = 0, TagNames = new[] { "Landscape", "Photography" }, W = 1200, H = 800 },
             new { Title = "Digital Character Sketch", Desc = "A striking character design concept with bold color choices.", Url = "https://res.cloudinary.com/dzpv8dz7e/image/upload/v1780888557/ovbj1vmgx6qsrvllqlri.jpg", Thumb = "https://res.cloudinary.com/dzpv8dz7e/image/upload/w_400,c_fill/v1780888557/ovbj1vmgx6qsrvllqlri.jpg", UserIdx = 1, TagNames = new[] { "Character Design", "Digital Art" }, W = 1200, H = 900 },
@@ -352,9 +330,9 @@ public static class SeedData
         {
             var groups = new[]
             {
-                new Group { Name = "Digital Art Collective", Description = "A community for digital artists to share techniques, feedback, and inspiration.", CreatorId = users[0].Id, IsPrivate = false, AvatarUrl = "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=400", BannerUrl = "https://images.unsplash.com/photo-1550684376-efcbd6e3f031?w=1200", CreatedAtUtc = DateTime.UtcNow.AddDays(-20), CreatedBy = "System.SeedData" },
-                new Group { Name = "Photography Enthusiasts", Description = "Share your best shots and learn from fellow photographers.", CreatorId = users[1].Id, IsPrivate = false, AvatarUrl = "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=400", BannerUrl = "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=1200", CreatedAtUtc = DateTime.UtcNow.AddDays(-15), CreatedBy = "System.SeedData" },
-                new Group { Name = "Watercolor Workshop", Description = "Weekly watercolor challenges and painting tips.", CreatorId = users[2 % users.Count].Id, IsPrivate = false, AvatarUrl = "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=400", BannerUrl = "https://res.cloudinary.com/dzpv8dz7e/image/upload/v1780888547/rrxgc4xrzgk3rtnpcytz.jpg", CreatedAtUtc = DateTime.UtcNow.AddDays(-10), CreatedBy = "System.SeedData" },
+                new Group { Name = "Digital Art Collective", Description = "A community for digital artists to share techniques, feedback, and inspiration.", CreatorId = users[0].Id, IsPrivate = false, AvatarUrl = "https://res.cloudinary.com/dzjoxcvv7/image/upload/v1/muse-space/w7o3q62z017y6d7y0k4w", BannerUrl = "https://res.cloudinary.com/dzjoxcvv7/image/upload/v1/muse-space/w7o3q62z017y6d7y0k4w", CreatedAtUtc = DateTime.UtcNow.AddDays(-20), CreatedBy = "System.SeedData" },
+                new Group { Name = "Photography Enthusiasts", Description = "Share your best shots and learn from fellow photographers.", CreatorId = users[1].Id, IsPrivate = false, AvatarUrl = "https://res.cloudinary.com/dzjoxcvv7/image/upload/v1/muse-space/w7o3q62z017y6d7y0k4w", BannerUrl = "https://res.cloudinary.com/dzjoxcvv7/image/upload/v1/muse-space/w7o3q62z017y6d7y0k4w", CreatedAtUtc = DateTime.UtcNow.AddDays(-15), CreatedBy = "System.SeedData" },
+                new Group { Name = "Watercolor Workshop", Description = "Weekly watercolor challenges and painting tips.", CreatorId = users[2 % users.Count].Id, IsPrivate = false, AvatarUrl = "https://res.cloudinary.com/dzjoxcvv7/image/upload/v1/muse-space/w7o3q62z017y6d7y0k4w", BannerUrl = "https://res.cloudinary.com/dzpv8dz7e/image/upload/v1780888547/rrxgc4xrzgk3rtnpcytz.jpg", CreatedAtUtc = DateTime.UtcNow.AddDays(-10), CreatedBy = "System.SeedData" },
             };
 
             await context.Groups.AddRangeAsync(groups);

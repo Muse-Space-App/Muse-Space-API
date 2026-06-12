@@ -84,7 +84,7 @@ public class EventService : IEventService
         return GenericResult<bool>.Success(true, "Event deleted successfully");
     }
 
-    public async Task<GenericResult<EventResponse>> GetEventAsync(int eventId, CancellationToken cancellationToken = default)
+    public async Task<GenericResult<EventResponse>> GetEventAsync(int eventId, int? currentUserId = null, CancellationToken cancellationToken = default)
     {
         var @event = await _eventRepository.GetByIdAsync(eventId, cancellationToken);
         if (@event == null)
@@ -93,6 +93,12 @@ public class EventService : IEventService
         }
 
         var response = _mapper.Map<EventResponse>(@event);
+        
+        if (currentUserId.HasValue)
+        {
+            response.IsRsvped = await _eventRepository.HasUserRsvpedAsync(eventId, currentUserId.Value, cancellationToken);
+        }
+
         return GenericResult<EventResponse>.Success(response);
     }
 

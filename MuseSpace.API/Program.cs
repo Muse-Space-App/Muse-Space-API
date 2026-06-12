@@ -54,6 +54,20 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
     };
+    
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddAuthorization();
@@ -246,6 +260,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<MuseSpace.API.Hubs.NotificationHub>("/hubs/notifications");
+app.MapHub<MuseSpace.API.Hubs.GroupChatHub>("/hubs/groupchat");
 
 using (var scope = app.Services.CreateAsyncScope())
 {

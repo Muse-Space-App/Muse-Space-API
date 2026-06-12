@@ -66,6 +66,7 @@ public class EventResponse
     public string OrganizerUsername { get; set; } = string.Empty;
     public string OrganizerAvatarUrl { get; set; } = string.Empty;
     public int RsvpCount { get; set; }
+    public bool IsRsvped { get; set; }
     public DateTime CreatedAtUtc { get; set; }
 }
 

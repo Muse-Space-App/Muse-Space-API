@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using MuseSpace.BLL.DTO;
 using MuseSpace.BLL.Interfaces.Services;
 using MuseSpace.Core.Enums;
 using MuseSpace.Core.Results;
+using MuseSpace.Core.Interfaces.Services;
 using System.Security.Claims;
 
 namespace MuseSpace.API.Controllers;
@@ -119,5 +121,28 @@ public class SocialController : ControllerBase
         }
 
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Upload an avatar image and return the URL
+    /// </summary>
+    [HttpPost("api/users/profile/avatar")]
+    [Authorize]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(GenericResult<string>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> UploadAvatar(IFormFile file, [FromServices] IMediaUploadService mediaUploadService, CancellationToken cancellationToken)
+    {
+        if (file == null || file.Length == 0) return BadRequest("No file uploaded");
+
+        try
+        {
+            using var stream = file.OpenReadStream();
+            var uploadResult = await mediaUploadService.UploadImageAsync(stream, file.FileName, cancellationToken);
+            return Ok(GenericResult<string>.Success(uploadResult.Url));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(GenericResult<string>.Failure(ex.Message, ErrorType.InternalError));
+        }
     }
 }

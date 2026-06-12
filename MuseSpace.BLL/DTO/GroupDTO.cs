@@ -36,6 +36,7 @@ public class GroupResponse
     public bool IsPrivate { get; set; }
     public int MemberCount { get; set; }
     public DateTime CreatedAtUtc { get; set; }
+    public bool IsMember { get; set; }
 }
 
 public class GroupMemberResponse

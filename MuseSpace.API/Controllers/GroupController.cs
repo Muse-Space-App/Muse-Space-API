@@ -6,6 +6,9 @@ using MuseSpace.Core.Enums;
 using MuseSpace.Core.Results;
 using System.Security.Claims;
 
+using Microsoft.AspNetCore.SignalR;
+using MuseSpace.API.Hubs;
+
 namespace MuseSpace.API.Controllers;
 
 /// <summary>Controller for managing group operations.</summary>
@@ -14,14 +17,17 @@ namespace MuseSpace.API.Controllers;
 public class GroupController : ControllerBase
 {
     private readonly IGroupService _groupService;
+    private readonly IHubContext<GroupChatHub> _hubContext;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GroupController"/> class.
     /// </summary>
     /// <param name="groupService">The group service.</param>
-    public GroupController(IGroupService groupService)
+    /// <param name="hubContext">The SignalR Hub context for group chat.</param>
+    public GroupController(IGroupService groupService, IHubContext<GroupChatHub> hubContext)
     {
         _groupService = groupService;
+        _hubContext = hubContext;
     }
 
     /// <summary>Creates a new group.</summary>
@@ -47,7 +53,9 @@ public class GroupController : ControllerBase
     [ProducesResponseType(typeof(GenericResult<GroupResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetGroup(int groupId, CancellationToken cancellationToken)
     {
-        var result = await _groupService.GetGroupAsync(groupId, cancellationToken);
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        int? currentUserId = userIdClaim != null ? int.Parse(userIdClaim) : null;
+        var result = await _groupService.GetGroupAsync(groupId, currentUserId, cancellationToken);
         if (!result.IsSuccess) return NotFound(result);
         return Ok(result);
     }
@@ -150,6 +158,10 @@ public class GroupController : ControllerBase
             if (result.ErrorType == ErrorType.Unauthorized) return Forbid();
             return BadRequest(result);
         }
+
+        // Broadcast the new post to connected clients in the group room
+        await _hubContext.Clients.Group($"Group_{groupId}").SendAsync("ReceiveMessage", result.Data, cancellationToken);
+
         return Ok(result);
     }
 

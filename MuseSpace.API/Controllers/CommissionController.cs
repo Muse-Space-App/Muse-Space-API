@@ -83,7 +83,7 @@ public class CommissionController : ControllerBase
     /// <param name="commissionId">Commission ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Commission details</returns>
-    [HttpGet("{commissionId}")]
+    [HttpGet("{commissionId:int}")]
     [ProducesResponseType(typeof(GenericResult<CommissionResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetCommission(int commissionId, CancellationToken cancellationToken)
     {
@@ -105,7 +105,7 @@ public class CommissionController : ControllerBase
     /// <param name="request">New status</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Updated commission</returns>
-    [HttpPatch("{commissionId}/status")]
+    [HttpPatch("{commissionId:int}/status")]
     [ProducesResponseType(typeof(GenericResult<CommissionResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateStatus(int commissionId, [FromBody] UpdateCommissionStatusRequest request, CancellationToken cancellationToken)
     {
@@ -129,7 +129,7 @@ public class CommissionController : ControllerBase
     /// <param name="pageSize">Items per page</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Paged list of messages</returns>
-    [HttpGet("{commissionId}/messages")]
+    [HttpGet("{commissionId:int}/messages")]
     [ProducesResponseType(typeof(GenericResult<PagedResult<CommissionMessageResponse>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMessages(int commissionId, [FromQuery] int page = 1, [FromQuery] int pageSize = 50, CancellationToken cancellationToken = default)
     {
@@ -151,7 +151,7 @@ public class CommissionController : ControllerBase
     /// <param name="request">Message content</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The sent message</returns>
-    [HttpPost("{commissionId}/messages")]
+    [HttpPost("{commissionId:int}/messages")]
     [EnableRateLimiting("fixed")]
     [ProducesResponseType(typeof(GenericResult<CommissionMessageResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> SendMessage(int commissionId, [FromBody] CreateCommissionMessageRequest request, CancellationToken cancellationToken)

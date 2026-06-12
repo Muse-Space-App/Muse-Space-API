@@ -40,12 +40,22 @@ public class EventController : ControllerBase
     /// <param name="eventId">The event identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The event details.</returns>
-    [HttpGet("{eventId}")]
+    [HttpGet("{eventId:int}")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(GenericResult<EventResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetEvent(int eventId, CancellationToken cancellationToken)
     {
-        var result = await _eventService.GetEventAsync(eventId, cancellationToken);
+        int? userId = null;
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userIdClaim != null)
+            {
+                userId = int.Parse(userIdClaim);
+            }
+        }
+
+        var result = await _eventService.GetEventAsync(eventId, userId, cancellationToken);
         if (!result.IsSuccess) return NotFound(result);
         return Ok(result);
     }
@@ -55,7 +65,7 @@ public class EventController : ControllerBase
     /// <param name="request">The event update request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated event.</returns>
-    [HttpPut("{eventId}")]
+    [HttpPut("{eventId:int}")]
     [Authorize]
     [ProducesResponseType(typeof(GenericResult<EventResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateEvent(int eventId, [FromBody] UpdateEventRequest request, CancellationToken cancellationToken)
@@ -76,7 +86,7 @@ public class EventController : ControllerBase
     /// <param name="eventId">The event identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A value indicating whether the deletion succeeded.</returns>
-    [HttpDelete("{eventId}")]
+    [HttpDelete("{eventId:int}")]
     [Authorize]
     [ProducesResponseType(typeof(GenericResult<bool>), StatusCodes.Status200OK)]
     public async Task<IActionResult> DeleteEvent(int eventId, CancellationToken cancellationToken)
@@ -126,7 +136,7 @@ public class EventController : ControllerBase
     /// <param name="eventId">The event identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A value indicating whether the RSVP succeeded.</returns>
-    [HttpPost("{eventId}/rsvp")]
+    [HttpPost("{eventId:int}/rsvp")]
     [Authorize]
     [ProducesResponseType(typeof(GenericResult<bool>), StatusCodes.Status200OK)]
     public async Task<IActionResult> RsvpEvent(int eventId, CancellationToken cancellationToken)
@@ -141,7 +151,7 @@ public class EventController : ControllerBase
     /// <param name="eventId">The event identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A value indicating whether the cancellation succeeded.</returns>
-    [HttpDelete("{eventId}/rsvp")]
+    [HttpDelete("{eventId:int}/rsvp")]
     [Authorize]
     [ProducesResponseType(typeof(GenericResult<bool>), StatusCodes.Status200OK)]
     public async Task<IActionResult> CancelRsvp(int eventId, CancellationToken cancellationToken)
@@ -158,7 +168,7 @@ public class EventController : ControllerBase
     /// <param name="pageSize">The number of items per page.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A paged list of event RSVPs.</returns>
-    [HttpGet("{eventId}/rsvps")]
+    [HttpGet("{eventId:int}/rsvps")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(GenericResult<PagedResult<EventRsvpResponse>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetEventRsvps(int eventId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
