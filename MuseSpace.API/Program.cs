@@ -255,6 +255,9 @@ using (var scope = app.Services.CreateAsyncScope())
         await dbContext.Database.MigrateAsync();
         Console.WriteLine("Database migrations applied successfully");
 
+        // SEEDING REMOVED TO PREVENT AZURE CONTAINER STARTUP TIMEOUTS
+        // If you need to seed again in the future, you can run it locally or via a separate script.
+        /*
         var strategy = dbContext.Database.CreateExecutionStrategy();
         await strategy.ExecuteAsync(async () =>
         {
@@ -285,6 +288,7 @@ using (var scope = app.Services.CreateAsyncScope())
                 throw;
             }
         });
+        */
     }
     catch (Exception ex)
     {
