@@ -238,8 +238,8 @@ app.UseSwaggerUI(options =>
 app.UseHttpsRedirection();
 app.UseRequestLogging();
 
-app.UseRateLimiter();
 app.UseCors("AllowAll");
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
