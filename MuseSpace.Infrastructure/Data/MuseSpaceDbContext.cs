@@ -94,6 +94,7 @@ public sealed class MuseSpaceDbContext : DbContext
 
         modelBuilder.Entity<Artwork>(entity =>
         {
+            entity.ToTable("Artwork");
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.CreatorId);
             entity.HasIndex(e => e.CreatedAtUtc);
