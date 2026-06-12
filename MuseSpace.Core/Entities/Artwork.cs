@@ -1,5 +1,7 @@
 namespace MuseSpace.Core.Entities;
+using System.ComponentModel.DataAnnotations.Schema;
 
+[Table("artwork")]
 public sealed class Artwork : BaseEntity
 {
     public int CreatorId { get; set; }
