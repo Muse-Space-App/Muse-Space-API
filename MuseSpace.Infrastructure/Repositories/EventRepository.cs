@@ -32,7 +32,7 @@ public class EventRepository : Repository<Event>, IEventRepository
     {
         await _context.EventRsvps.AddAsync(rsvp, cancellationToken);
         await _context.Database.ExecuteSqlRawAsync(
-            "UPDATE Events SET RsvpCount = RsvpCount + 1 WHERE Id = {0}",
+            "UPDATE \"Events\" SET \"RsvpCount\" = \"RsvpCount\" + 1 WHERE \"Id\" = {0}",
             new object[] { rsvp.EventId },
             cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
@@ -42,7 +42,7 @@ public class EventRepository : Repository<Event>, IEventRepository
     {
         _context.EventRsvps.Remove(rsvp);
         await _context.Database.ExecuteSqlRawAsync(
-            "UPDATE Events SET RsvpCount = CASE WHEN RsvpCount > 0 THEN RsvpCount - 1 ELSE 0 END WHERE Id = {0}",
+            "UPDATE \"Events\" SET \"RsvpCount\" = CASE WHEN \"RsvpCount\" > 0 THEN \"RsvpCount\" - 1 ELSE 0 END WHERE \"Id\" = {0}",
             new object[] { rsvp.EventId },
             cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
