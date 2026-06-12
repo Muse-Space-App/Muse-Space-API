@@ -293,7 +293,8 @@ using (var scope = app.Services.CreateAsyncScope())
     catch (Exception ex)
     {
         Console.WriteLine($"Database initialization failed: {ex.Message}");
-        throw;
+        // We removed `throw;` here so the application doesn't completely crash and return 503.
+        // It will start up, but if the database is truly unreachable, the individual API endpoints will fail.
     }
 }
 
