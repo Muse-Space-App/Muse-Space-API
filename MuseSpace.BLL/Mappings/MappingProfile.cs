@@ -8,7 +8,9 @@ public sealed class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        CreateMap<Comment, CommentResponse>();
+        CreateMap<Comment, CommentResponse>()
+            .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.User != null ? src.User.Username : string.Empty))
+            .ForMember(dest => dest.UserProfileImageUrl, opt => opt.MapFrom(src => src.User != null && src.User.UserProfile != null ? src.User.UserProfile.ProfileImageUrl : string.Empty));
 
         CreateMap<BaseEntity, SampleDto>()
             .ForMember(destination => destination.Name, options => options.MapFrom(source => source.CreatedBy));
