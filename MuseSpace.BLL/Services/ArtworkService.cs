@@ -80,7 +80,7 @@ public class ArtworkService : IArtworkService
         foreach (var tagName in distinctTags)
         {
             var tag = await _tagRepository.GetOrCreateAsync(tagName, user.Email, cancellationToken);
-            artwork.ArtworkTags.Add(new ArtworkTag { Tag = tag });
+            artwork.ArtworkTags.Add(new ArtworkTag { TagId = tag.Id });
             await _tagRepository.IncrementUsageCountAsync(tag.Id, cancellationToken);
         }
 
