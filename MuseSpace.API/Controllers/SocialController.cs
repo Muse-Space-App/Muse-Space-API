@@ -61,6 +61,22 @@ public class SocialController : ControllerBase
     }
 
     /// <summary>
+    /// Update the current user's profile
+    /// </summary>
+    [HttpPut("api/users/profile")]
+    [Authorize]
+    [ProducesResponseType(typeof(GenericResult<UserProfileResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request, CancellationToken cancellationToken)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await _socialService.UpdateUserProfileAsync(userId, request, cancellationToken);
+
+        if (!result.IsSuccess) return BadRequest(result);
+
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Get a user's followers
     /// </summary>
     [HttpGet("api/users/{userId}/followers")]

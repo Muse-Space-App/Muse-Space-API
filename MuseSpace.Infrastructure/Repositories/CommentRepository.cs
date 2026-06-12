@@ -50,9 +50,8 @@ public class CommentRepository : Repository<Comment>, ICommentRepository
         await base.AddAsync(entity, cancellationToken);
 
         // Update Artwork CommentCount
-        await _context.Database.ExecuteSqlRawAsync(
-            "UPDATE Artwork SET CommentCount = CommentCount + 1 WHERE Id = {0}",
-            new object[] { entity.ArtworkId },
-            cancellationToken);
+        await _context.Artwork
+            .Where(a => a.Id == entity.ArtworkId)
+            .ExecuteUpdateAsync(s => s.SetProperty(a => a.CommentCount, a => a.CommentCount + 1), cancellationToken);
     }
 }

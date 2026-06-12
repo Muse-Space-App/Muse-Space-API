@@ -22,20 +22,18 @@ public class InteractionRepository : IInteractionRepository
     public async Task AddLikeAsync(Like like, CancellationToken cancellationToken = default)
     {
         await _context.Likes.AddAsync(like, cancellationToken);
-        await _context.Database.ExecuteSqlRawAsync(
-            "UPDATE Artwork SET LikeCount = LikeCount + 1 WHERE Id = {0}",
-            new object[] { like.ArtworkId },
-            cancellationToken);
+        await _context.Artwork
+            .Where(a => a.Id == like.ArtworkId)
+            .ExecuteUpdateAsync(s => s.SetProperty(a => a.LikeCount, a => a.LikeCount + 1), cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task RemoveLikeAsync(Like like, CancellationToken cancellationToken = default)
     {
         _context.Likes.Remove(like);
-        await _context.Database.ExecuteSqlRawAsync(
-            "UPDATE Artwork SET LikeCount = CASE WHEN LikeCount > 0 THEN LikeCount - 1 ELSE 0 END WHERE Id = {0}",
-            new object[] { like.ArtworkId },
-            cancellationToken);
+        await _context.Artwork
+            .Where(a => a.Id == like.ArtworkId && a.LikeCount > 0)
+            .ExecuteUpdateAsync(s => s.SetProperty(a => a.LikeCount, a => a.LikeCount - 1), cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
     }
 
@@ -47,30 +45,27 @@ public class InteractionRepository : IInteractionRepository
     public async Task AddBookmarkAsync(Bookmark bookmark, CancellationToken cancellationToken = default)
     {
         await _context.Bookmarks.AddAsync(bookmark, cancellationToken);
-        await _context.Database.ExecuteSqlRawAsync(
-            "UPDATE Artwork SET BookmarkCount = BookmarkCount + 1 WHERE Id = {0}",
-            new object[] { bookmark.ArtworkId },
-            cancellationToken);
+        await _context.Artwork
+            .Where(a => a.Id == bookmark.ArtworkId)
+            .ExecuteUpdateAsync(s => s.SetProperty(a => a.BookmarkCount, a => a.BookmarkCount + 1), cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task RemoveBookmarkAsync(Bookmark bookmark, CancellationToken cancellationToken = default)
     {
         _context.Bookmarks.Remove(bookmark);
-        await _context.Database.ExecuteSqlRawAsync(
-            "UPDATE Artwork SET BookmarkCount = CASE WHEN BookmarkCount > 0 THEN BookmarkCount - 1 ELSE 0 END WHERE Id = {0}",
-            new object[] { bookmark.ArtworkId },
-            cancellationToken);
+        await _context.Artwork
+            .Where(a => a.Id == bookmark.ArtworkId && a.BookmarkCount > 0)
+            .ExecuteUpdateAsync(s => s.SetProperty(a => a.BookmarkCount, a => a.BookmarkCount - 1), cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task AddShareAsync(Share share, CancellationToken cancellationToken = default)
     {
         await _context.Shares.AddAsync(share, cancellationToken);
-        await _context.Database.ExecuteSqlRawAsync(
-            "UPDATE Artwork SET ShareCount = ShareCount + 1 WHERE Id = {0}",
-            new object[] { share.ArtworkId },
-            cancellationToken);
+        await _context.Artwork
+            .Where(a => a.Id == share.ArtworkId)
+            .ExecuteUpdateAsync(s => s.SetProperty(a => a.ShareCount, a => a.ShareCount + 1), cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
     }
 

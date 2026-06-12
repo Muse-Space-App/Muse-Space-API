@@ -29,20 +29,18 @@ public class GroupRepository : Repository<Group>, IGroupRepository
     public async Task AddGroupMemberAsync(GroupMember member, CancellationToken cancellationToken = default)
     {
         await _context.GroupMembers.AddAsync(member, cancellationToken);
-        await _context.Database.ExecuteSqlRawAsync(
-            "UPDATE Groups SET MemberCount = MemberCount + 1 WHERE Id = {0}",
-            new object[] { member.GroupId },
-            cancellationToken);
+        await _context.Groups
+            .Where(g => g.Id == member.GroupId)
+            .ExecuteUpdateAsync(s => s.SetProperty(g => g.MemberCount, g => g.MemberCount + 1), cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task RemoveGroupMemberAsync(GroupMember member, CancellationToken cancellationToken = default)
     {
         _context.GroupMembers.Remove(member);
-        await _context.Database.ExecuteSqlRawAsync(
-            "UPDATE Groups SET MemberCount = CASE WHEN MemberCount > 0 THEN MemberCount - 1 ELSE 0 END WHERE Id = {0}",
-            new object[] { member.GroupId },
-            cancellationToken);
+        await _context.Groups
+            .Where(g => g.Id == member.GroupId && g.MemberCount > 0)
+            .ExecuteUpdateAsync(s => s.SetProperty(g => g.MemberCount, g => g.MemberCount - 1), cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
     }
 

@@ -168,14 +168,32 @@ public class SocialService : ISocialService
             return GenericResult<bool>.Failure("User profile not found", ErrorType.NotFound);
         }
 
-        if (isAccepting && user.UserProfile.ArtworkCount < 5)
-        {
-            return GenericResult<bool>.Failure("You must post at least 5 artworks before you can accept commissions.", ErrorType.ValidationFailed);
-        }
-
         user.UserProfile.IsAcceptingCommissions = isAccepting;
         await _userRepository.UpdateAsync(user, cancellationToken);
 
         return GenericResult<bool>.Success(isAccepting, isAccepting ? "You are now accepting commissions." : "You are no longer accepting commissions.");
+    }
+
+    public async Task<GenericResult<UserProfileResponse>> UpdateUserProfileAsync(int userId, UpdateProfileRequest request, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        if (user == null)
+        {
+            return GenericResult<UserProfileResponse>.Failure("User not found", ErrorType.NotFound);
+        }
+
+        if (user.UserProfile == null)
+        {
+            user.UserProfile = new UserProfile { UserId = userId };
+        }
+
+        if (request.Bio != null) user.UserProfile.Bio = request.Bio;
+        if (request.AvatarUrl != null) user.UserProfile.AvatarUrl = request.AvatarUrl;
+        if (request.BannerUrl != null) user.UserProfile.BannerUrl = request.BannerUrl;
+        if (request.SocialLinks != null) user.UserProfile.SocialLinks = request.SocialLinks;
+
+        await _userRepository.UpdateAsync(user, cancellationToken);
+
+        return await GetUserProfileAsync(userId, userId, cancellationToken);
     }
 }
