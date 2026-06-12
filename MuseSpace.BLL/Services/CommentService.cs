@@ -5,6 +5,7 @@ using MuseSpace.Core.Entities;
 using MuseSpace.Core.Enums;
 using MuseSpace.Core.Interfaces.Repositories;
 using MuseSpace.Core.Results;
+using Microsoft.EntityFrameworkCore;
 
 namespace MuseSpace.BLL.Services;
 
@@ -12,13 +13,15 @@ public class CommentService : ICommentService
 {
     private readonly ICommentRepository _commentRepository;
     private readonly IArtworkRepository _artworkRepository;
+    private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
     private readonly INotificationService _notificationService;
 
-    public CommentService(ICommentRepository commentRepository, IArtworkRepository artworkRepository, IMapper mapper, INotificationService notificationService)
+    public CommentService(ICommentRepository commentRepository, IArtworkRepository artworkRepository, IUserRepository userRepository, IMapper mapper, INotificationService notificationService)
     {
         _commentRepository = commentRepository;
         _artworkRepository = artworkRepository;
+        _userRepository = userRepository;
         _mapper = mapper;
         _notificationService = notificationService;
     }
@@ -65,7 +68,17 @@ public class CommentService : ICommentService
             );
         }
 
-        // Ideally fetch full comment with user profile to map properly, but we'll map basic info
+        // Fetch the user to populate the response properly
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        
+        // Let's use GetByUsernameAsync to get full profile
+        if (user != null)
+        {
+            user = await _userRepository.GetByUsernameAsync(user.Username, cancellationToken);
+        }
+
+        comment.User = user;
+
         var response = _mapper.Map<CommentResponse>(comment);
         return GenericResult<CommentResponse>.Success(response, "Comment created successfully");
     }

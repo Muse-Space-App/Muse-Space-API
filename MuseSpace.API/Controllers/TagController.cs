@@ -10,7 +10,7 @@ namespace MuseSpace.API.Controllers;
 /// Endpoints for retrieving and managing tags associated with artworks.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/tags")]
 public class TagController : ControllerBase
 {
     private readonly ITagService _tagService;

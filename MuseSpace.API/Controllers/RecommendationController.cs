@@ -47,6 +47,7 @@ public class RecommendationController : ControllerBase
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Similar artworks</returns>
     [HttpGet("similar/{artworkId}")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(GenericResult<PagedResult<ArtworkResponse>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSimilarArtworks(int artworkId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
     {

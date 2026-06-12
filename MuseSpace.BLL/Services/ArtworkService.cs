@@ -228,4 +228,40 @@ public class ArtworkService : IArtworkService
         var items = _mapper.Map<IReadOnlyCollection<ArtworkResponse>>(artworks);
         return GenericResult<IReadOnlyCollection<ArtworkResponse>>.Success(items);
     }
+
+    public async Task<GenericResult<PagedResult<ArtworkResponse>>> GetLikedArtworksAsync(int userId, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var skip = (page - 1) * pageSize;
+        var artworks = await _artworkRepository.GetLikedByUserIdAsync(userId, skip, pageSize, cancellationToken);
+        
+        var items = _mapper.Map<IReadOnlyCollection<ArtworkResponse>>(artworks);
+        
+        var pagedResult = new PagedResult<ArtworkResponse>
+        {
+            Items = items.ToList(),
+            PageNumber = page,
+            PageSize = pageSize,
+            TotalCount = 0 // Optimization: we can just return 0 since frontend doesn't strictly use total pages for masonry yet
+        };
+
+        return GenericResult<PagedResult<ArtworkResponse>>.Success(pagedResult);
+    }
+
+    public async Task<GenericResult<PagedResult<ArtworkResponse>>> GetBookmarkedArtworksAsync(int userId, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var skip = (page - 1) * pageSize;
+        var artworks = await _artworkRepository.GetBookmarkedByUserIdAsync(userId, skip, pageSize, cancellationToken);
+        
+        var items = _mapper.Map<IReadOnlyCollection<ArtworkResponse>>(artworks);
+        
+        var pagedResult = new PagedResult<ArtworkResponse>
+        {
+            Items = items.ToList(),
+            PageNumber = page,
+            PageSize = pageSize,
+            TotalCount = 0
+        };
+
+        return GenericResult<PagedResult<ArtworkResponse>>.Success(pagedResult);
+    }
 }

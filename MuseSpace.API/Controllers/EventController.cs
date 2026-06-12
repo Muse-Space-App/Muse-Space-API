@@ -166,4 +166,19 @@ public class EventController : ControllerBase
         var result = await _eventService.GetEventRsvpsAsync(eventId, page, pageSize, cancellationToken);
         return Ok(result);
     }
+
+    /// <summary>Gets the list of events the current user has RSVP'd to.</summary>
+    /// <param name="page">The page number.</param>
+    /// <param name="pageSize">The number of items per page.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A paged list of events.</returns>
+    [HttpGet("my-rsvps")]
+    [Authorize]
+    [ProducesResponseType(typeof(GenericResult<PagedResult<EventResponse>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMyRsvpedEvents([FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await _eventService.GetMyRsvpedEventsAsync(userId, page, pageSize, cancellationToken);
+        return Ok(result);
+    }
 }

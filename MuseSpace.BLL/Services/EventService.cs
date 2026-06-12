@@ -193,4 +193,20 @@ public class EventService : IEventService
 
         return GenericResult<PagedResult<EventRsvpResponse>>.Success(pagedResult);
     }
+
+    public async Task<GenericResult<PagedResult<EventResponse>>> GetMyRsvpedEventsAsync(int userId, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var events = await _eventRepository.GetRsvpedEventsByUserIdAsync(userId, page, pageSize, cancellationToken);
+        var responses = _mapper.Map<IReadOnlyCollection<EventResponse>>(events);
+        
+        var pagedResult = new PagedResult<EventResponse>
+        {
+            Items = responses,
+            PageNumber = page,
+            PageSize = pageSize,
+            TotalCount = 0
+        };
+
+        return GenericResult<PagedResult<EventResponse>>.Success(pagedResult);
+    }
 }

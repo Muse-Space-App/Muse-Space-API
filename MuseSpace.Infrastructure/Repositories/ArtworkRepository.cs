@@ -137,6 +137,52 @@ public class ArtworkRepository : Repository<Artwork>, IArtworkRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyCollection<Artwork>> GetLikedByUserIdAsync(int userId, int skip, int take, CancellationToken cancellationToken = default)
+    {
+        var artworkIds = await _dbContext.Likes
+            .Where(l => l.UserId == userId)
+            .OrderByDescending(l => l.CreatedAtUtc)
+            .Skip(skip)
+            .Take(take)
+            .Select(l => l.ArtworkId)
+            .ToListAsync(cancellationToken);
+
+        if (!artworkIds.Any()) return new List<Artwork>();
+
+        var artworks = await _dbContext.Set<Artwork>()
+            .AsNoTracking()
+            .Include(a => a.Creator)
+            .Include(a => a.ArtworkTags)
+                .ThenInclude(at => at.Tag)
+            .Where(a => artworkIds.Contains(a.Id) && !a.IsSoftDeleted)
+            .ToListAsync(cancellationToken);
+
+        return artworkIds.Select(id => artworks.FirstOrDefault(a => a.Id == id)).Where(a => a != null).Select(a => a!).ToList();
+    }
+
+    public async Task<IReadOnlyCollection<Artwork>> GetBookmarkedByUserIdAsync(int userId, int skip, int take, CancellationToken cancellationToken = default)
+    {
+        var artworkIds = await _dbContext.Bookmarks
+            .Where(b => b.UserId == userId)
+            .OrderByDescending(b => b.CreatedAtUtc)
+            .Skip(skip)
+            .Take(take)
+            .Select(b => b.ArtworkId)
+            .ToListAsync(cancellationToken);
+
+        if (!artworkIds.Any()) return new List<Artwork>();
+
+        var artworks = await _dbContext.Set<Artwork>()
+            .AsNoTracking()
+            .Include(a => a.Creator)
+            .Include(a => a.ArtworkTags)
+                .ThenInclude(at => at.Tag)
+            .Where(a => artworkIds.Contains(a.Id) && !a.IsSoftDeleted)
+            .ToListAsync(cancellationToken);
+
+        return artworkIds.Select(id => artworks.FirstOrDefault(a => a.Id == id)).Where(a => a != null).Select(a => a!).ToList();
+    }
+
     public async Task IncrementViewCountAsync(int artworkId, CancellationToken cancellationToken = default)
     {
         await _dbContext.Database.ExecuteSqlRawAsync(

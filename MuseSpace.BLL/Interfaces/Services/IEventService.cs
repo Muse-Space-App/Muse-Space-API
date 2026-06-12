@@ -16,4 +16,5 @@ public interface IEventService
     Task<GenericResult<bool>> RsvpEventAsync(int eventId, int userId, CancellationToken cancellationToken = default);
     Task<GenericResult<bool>> CancelRsvpAsync(int eventId, int userId, CancellationToken cancellationToken = default);
     Task<GenericResult<PagedResult<EventRsvpResponse>>> GetEventRsvpsAsync(int eventId, int page, int pageSize, CancellationToken cancellationToken = default);
+    Task<GenericResult<PagedResult<EventResponse>>> GetMyRsvpedEventsAsync(int userId, int page, int pageSize, CancellationToken cancellationToken = default);
 }

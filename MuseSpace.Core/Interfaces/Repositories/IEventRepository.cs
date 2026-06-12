@@ -11,6 +11,7 @@ public interface IEventRepository : IRepository<Event>
     Task<IReadOnlyCollection<Event>> GetUpcomingEventsAsync(int page, int pageSize, CancellationToken cancellationToken = default);
     Task<IReadOnlyCollection<Event>> GetEventsByOrganizerAsync(int organizerId, int page, int pageSize, CancellationToken cancellationToken = default);
     Task<IReadOnlyCollection<EventRsvp>> GetEventRsvpsAsync(int eventId, int page, int pageSize, CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<Event>> GetRsvpedEventsByUserIdAsync(int userId, int page, int pageSize, CancellationToken cancellationToken = default);
 
     Task<int> GetUpcomingEventsCountAsync(CancellationToken cancellationToken = default);
     Task<int> GetEventsByOrganizerCountAsync(int organizerId, CancellationToken cancellationToken = default);

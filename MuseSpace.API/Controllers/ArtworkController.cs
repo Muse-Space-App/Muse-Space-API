@@ -107,6 +107,32 @@ public class ArtworkController : ControllerBase
     }
 
     /// <summary>
+    /// Get artworks liked by the current user
+    /// </summary>
+    [HttpGet("liked")]
+    [Authorize]
+    [ProducesResponseType(typeof(GenericResult<PagedResult<ArtworkResponse>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetLikedArtworks([FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await _artworkService.GetLikedArtworksAsync(userId, page, pageSize, cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Get artworks bookmarked by the current user
+    /// </summary>
+    [HttpGet("bookmarked")]
+    [Authorize]
+    [ProducesResponseType(typeof(GenericResult<PagedResult<ArtworkResponse>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetBookmarkedArtworks([FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await _artworkService.GetBookmarkedArtworksAsync(userId, page, pageSize, cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Update an existing artwork
     /// </summary>
     /// <remarks>

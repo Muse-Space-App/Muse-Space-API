@@ -14,4 +14,6 @@ public interface IArtworkService
     Task<GenericResult<PagedResult<ArtworkResponse>>> SearchAsync(string query, int page, int pageSize, int? currentUserId = null, CancellationToken cancellationToken = default);
     Task<GenericResult<ArtworkFeedResponse>> GetFeedAsync(int? cursor, int limit, int? currentUserId = null, CancellationToken cancellationToken = default);
     Task<GenericResult<IReadOnlyCollection<ArtworkResponse>>> GetTrendingAsync(int limit, int? currentUserId = null, CancellationToken cancellationToken = default);
+    Task<GenericResult<PagedResult<ArtworkResponse>>> GetLikedArtworksAsync(int userId, int page, int pageSize, CancellationToken cancellationToken = default);
+    Task<GenericResult<PagedResult<ArtworkResponse>>> GetBookmarkedArtworksAsync(int userId, int page, int pageSize, CancellationToken cancellationToken = default);
 }

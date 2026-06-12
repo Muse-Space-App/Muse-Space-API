@@ -11,6 +11,8 @@ public interface IArtworkRepository : IRepository<Artwork>
     Task<IReadOnlyCollection<Artwork>> GetTrendingAsync(int limit, CancellationToken cancellationToken = default);
     Task<IReadOnlyCollection<Artwork>> GetByTagAsync(string tagSlug, int skip, int take, CancellationToken cancellationToken = default);
     Task<IReadOnlyCollection<Artwork>> GetRecommendedAsync(int userId, int limit, CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<Artwork>> GetLikedByUserIdAsync(int userId, int skip, int take, CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<Artwork>> GetBookmarkedByUserIdAsync(int userId, int skip, int take, CancellationToken cancellationToken = default);
 
     Task IncrementViewCountAsync(int artworkId, CancellationToken cancellationToken = default);
     Task IncrementLikeCountAsync(int artworkId, CancellationToken cancellationToken = default);

@@ -84,6 +84,27 @@ public class EventRepository : Repository<Event>, IEventRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyCollection<Event>> GetRsvpedEventsByUserIdAsync(int userId, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var eventIds = await _context.EventRsvps
+            .Where(er => er.UserId == userId)
+            .OrderByDescending(er => er.RsvpedAtUtc)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(er => er.EventId)
+            .ToListAsync(cancellationToken);
+
+        if (!eventIds.Any()) return new List<Event>();
+
+        var events = await _context.Events
+            .Include(e => e.Organizer)
+                .ThenInclude(u => u!.UserProfile)
+            .Where(e => eventIds.Contains(e.Id))
+            .ToListAsync(cancellationToken);
+
+        return eventIds.Select(id => events.FirstOrDefault(e => e.Id == id)).Where(e => e != null).Select(e => e!).ToList();
+    }
+
     public async Task<int> GetUpcomingEventsCountAsync(CancellationToken cancellationToken = default)
     {
         return await _context.Events.CountAsync(e => e.StartDateUtc >= DateTime.UtcNow, cancellationToken);
