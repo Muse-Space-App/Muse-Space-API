@@ -14,6 +14,22 @@ public class GroupRepository : Repository<Group>, IGroupRepository
         _context = context;
     }
 
+    public override async Task<Group?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return await _context.Groups
+            .Include(g => g.Creator)
+                .ThenInclude(u => u!.UserProfile)
+            .FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
+    }
+
+    public override async Task<IReadOnlyCollection<Group>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Groups
+            .Include(g => g.Creator)
+                .ThenInclude(u => u!.UserProfile)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<bool> IsUserInGroupAsync(int groupId, int userId, CancellationToken cancellationToken = default)
     {
         return await _context.GroupMembers
@@ -29,19 +45,19 @@ public class GroupRepository : Repository<Group>, IGroupRepository
     public async Task AddGroupMemberAsync(GroupMember member, CancellationToken cancellationToken = default)
     {
         await _context.GroupMembers.AddAsync(member, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
         await _context.Groups
             .Where(g => g.Id == member.GroupId)
             .ExecuteUpdateAsync(s => s.SetProperty(g => g.MemberCount, g => g.MemberCount + 1), cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task RemoveGroupMemberAsync(GroupMember member, CancellationToken cancellationToken = default)
     {
         _context.GroupMembers.Remove(member);
+        await _context.SaveChangesAsync(cancellationToken);
         await _context.Groups
             .Where(g => g.Id == member.GroupId && g.MemberCount > 0)
             .ExecuteUpdateAsync(s => s.SetProperty(g => g.MemberCount, g => g.MemberCount - 1), cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task UpdateGroupMemberAsync(GroupMember member, CancellationToken cancellationToken = default)

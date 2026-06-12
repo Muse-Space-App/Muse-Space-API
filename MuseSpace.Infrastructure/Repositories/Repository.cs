@@ -30,7 +30,7 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
 
-    public async Task<IReadOnlyCollection<T>> GetAllAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<IReadOnlyCollection<T>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .AsNoTracking()
