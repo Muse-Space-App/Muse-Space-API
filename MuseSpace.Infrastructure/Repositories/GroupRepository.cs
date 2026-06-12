@@ -19,6 +19,7 @@ public class GroupRepository : Repository<Group>, IGroupRepository
         return await _context.Groups
             .Include(g => g.Creator)
                 .ThenInclude(u => u!.UserProfile)
+            .Include(g => g.Members)
             .FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
     }
 
@@ -27,6 +28,7 @@ public class GroupRepository : Repository<Group>, IGroupRepository
         return await _context.Groups
             .Include(g => g.Creator)
                 .ThenInclude(u => u!.UserProfile)
+            .Include(g => g.Members)
             .ToListAsync(cancellationToken);
     }
 
@@ -46,18 +48,12 @@ public class GroupRepository : Repository<Group>, IGroupRepository
     {
         await _context.GroupMembers.AddAsync(member, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
-        await _context.Groups
-            .Where(g => g.Id == member.GroupId)
-            .ExecuteUpdateAsync(s => s.SetProperty(g => g.MemberCount, g => g.MemberCount + 1), cancellationToken);
     }
 
     public async Task RemoveGroupMemberAsync(GroupMember member, CancellationToken cancellationToken = default)
     {
         _context.GroupMembers.Remove(member);
         await _context.SaveChangesAsync(cancellationToken);
-        await _context.Groups
-            .Where(g => g.Id == member.GroupId && g.MemberCount > 0)
-            .ExecuteUpdateAsync(s => s.SetProperty(g => g.MemberCount, g => g.MemberCount - 1), cancellationToken);
     }
 
     public async Task UpdateGroupMemberAsync(GroupMember member, CancellationToken cancellationToken = default)
@@ -71,6 +67,7 @@ public class GroupRepository : Repository<Group>, IGroupRepository
         return await _context.GroupMembers
             .Where(gm => gm.UserId == userId)
             .Include(gm => gm.Group)
+                .ThenInclude(g => g!.Members)
             .OrderByDescending(gm => gm.JoinedAtUtc)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)

@@ -42,7 +42,7 @@ public class GroupService : IGroupService
         };
         await _groupRepository.AddGroupMemberAsync(member, cancellationToken);
 
-        // Re-fetch to get updated MemberCount
+        // Re-fetch to get accurate MemberCount from actual GroupMembers rows
         var updatedGroup = await _groupRepository.GetByIdAsync(group.Id, cancellationToken) ?? group;
         var response = _mapper.Map<GroupResponse>(updatedGroup);
         return GenericResult<GroupResponse>.Success(response, "Group created successfully");
