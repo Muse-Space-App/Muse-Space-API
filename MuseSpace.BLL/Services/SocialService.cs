@@ -179,9 +179,14 @@ public class SocialService : ISocialService
         }
 
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-        if (user == null || user.UserProfile == null)
+        if (user == null)
         {
-            return GenericResult<bool>.Failure("User profile not found", ErrorType.NotFound);
+            return GenericResult<bool>.Failure("User not found", ErrorType.NotFound);
+        }
+
+        if (user.UserProfile == null)
+        {
+            user.UserProfile = new UserProfile { UserId = userId };
         }
 
         user.UserProfile.IsAcceptingCommissions = isAccepting;

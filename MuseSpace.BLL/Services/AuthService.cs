@@ -64,7 +64,8 @@ public sealed class AuthService : IAuthService
             IsActive = true,
             RoleId = memberRole.Id,
             CreatedAtUtc = _dateTimeProvider.UtcNow,
-            CreatedBy = email
+            CreatedBy = email,
+            UserProfile = new UserProfile { Bio = string.Empty, AvatarUrl = string.Empty, BannerUrl = string.Empty, CreatorTier = string.Empty }
         };
 
         await _userRepository.AddAsync(user, cancellationToken);
