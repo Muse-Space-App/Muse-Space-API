@@ -106,12 +106,20 @@ public class GroupService : IGroupService
         return GenericResult<PagedResult<GroupResponse>>.Success(pagedResult);
     }
 
-    public async Task<GenericResult<PagedResult<GroupResponse>>> GetAllGroupsAsync(int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<GenericResult<PagedResult<GroupResponse>>> GetAllGroupsAsync(int page, int pageSize, int? currentUserId = null, CancellationToken cancellationToken = default)
     {
         var groups = await _groupRepository.GetAllAsync(cancellationToken);
         
         var pagedGroups = groups.Skip((page - 1) * pageSize).Take(pageSize).ToList();
         var responses = _mapper.Map<IReadOnlyCollection<GroupResponse>>(pagedGroups);
+
+        if (currentUserId.HasValue)
+        {
+            foreach (var response in responses)
+            {
+                response.IsMember = await _groupRepository.IsUserInGroupAsync(response.Id, currentUserId.Value, cancellationToken);
+            }
+        }
 
         var pagedResult = new PagedResult<GroupResponse>
         {

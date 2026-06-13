@@ -5,8 +5,10 @@ namespace MuseSpace.BLL.DTO;
 public class ReportResponse
 {
     public int Id { get; set; }
-    public int ArtworkId { get; set; }
+    public int? ArtworkId { get; set; }
     public string ArtworkTitle { get; set; } = string.Empty;
+    public int? TargetUserId { get; set; }
+    public string TargetUsername { get; set; } = string.Empty;
     public int ReportedById { get; set; }
     public string ReportedByUsername { get; set; } = string.Empty;
     public string ReportType { get; set; } = string.Empty;

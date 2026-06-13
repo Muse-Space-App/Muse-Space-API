@@ -32,6 +32,7 @@ public sealed class User : BaseEntity
     public ICollection<Follow> Followers { get; set; } = new List<Follow>();
     public ICollection<Follow> Following { get; set; } = new List<Follow>();
     public ICollection<Report> Reports { get; set; } = new List<Report>();
+    public ICollection<Report> ReceivedReports { get; set; } = new List<Report>();
     public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
     public ICollection<Commission> RequestedCommissions { get; set; } = new List<Commission>();

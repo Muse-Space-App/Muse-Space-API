@@ -66,6 +66,7 @@ public sealed class MuseSpaceDbContext : DbContext
             entity.HasMany(e => e.Followers).WithOne(f => f.Follower).HasForeignKey(f => f.FollowerId).OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(e => e.Following).WithOne(f => f.FollowingUser).HasForeignKey(f => f.FollowingId).OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(e => e.Reports).WithOne(r => r.ReportedBy).HasForeignKey(r => r.ReportedById).OnDelete(DeleteBehavior.NoAction);
+            entity.HasMany(e => e.ReceivedReports).WithOne(r => r.TargetUser).HasForeignKey(r => r.TargetUserId).OnDelete(DeleteBehavior.NoAction);
             entity.HasMany(e => e.Notifications).WithOne(n => n.User).HasForeignKey(n => n.UserId).OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(e => e.RequestedCommissions).WithOne(c => c.Requester).HasForeignKey(c => c.RequesterId).OnDelete(DeleteBehavior.Restrict);
             entity.HasMany(e => e.ReceivedCommissions).WithOne(c => c.Artist).HasForeignKey(c => c.ArtistId).OnDelete(DeleteBehavior.Restrict);

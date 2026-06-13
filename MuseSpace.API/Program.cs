@@ -228,6 +228,7 @@ builder.Services.AddScoped<ISearchService, SearchService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IPaymentService, QrisPaymentService>();
 builder.Services.AddHttpClient<IAiDescriptionService, GeminiDescriptionService>();
 

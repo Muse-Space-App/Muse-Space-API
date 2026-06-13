@@ -37,11 +37,13 @@ public class AdminService : IAdminService
     public async Task<GenericResult<PagedResult<ReportResponse>>> GetPendingReportsAsync(int page, int pageSize, CancellationToken cancellationToken = default)
     {
         var query = _dbContext.Reports
-            .Include(r => r.Artwork)
             .Include(r => r.ReportedBy)
-            .Where(r => r.Status == "Pending");
+            .Include(r => r.Artwork)
+            .Include(r => r.TargetUser)
+            .Where(r => r.Status == "Pending")
+            .AsQueryable();
 
-        var total = await query.CountAsync(cancellationToken);
+        var totalItems = await query.CountAsync(cancellationToken);
 
         var items = await query
             .OrderByDescending(r => r.CreatedAtUtc)
@@ -51,7 +53,9 @@ public class AdminService : IAdminService
             {
                 Id = r.Id,
                 ArtworkId = r.ArtworkId,
-                ArtworkTitle = r.Artwork!.Title,
+                ArtworkTitle = r.Artwork != null ? r.Artwork.Title : "",
+                TargetUserId = r.TargetUserId,
+                TargetUsername = r.TargetUser != null ? r.TargetUser.Username : "",
                 ReportedById = r.ReportedById,
                 ReportedByUsername = r.ReportedBy!.Username,
                 ReportType = r.ReportType,
@@ -68,7 +72,7 @@ public class AdminService : IAdminService
             Items = items,
             PageNumber = page,
             PageSize = pageSize,
-            TotalCount = total
+            TotalCount = totalItems
         });
     }
 
@@ -77,6 +81,7 @@ public class AdminService : IAdminService
         var report = await _dbContext.Reports
             .Include(r => r.Artwork)
             .Include(r => r.ReportedBy)
+            .Include(r => r.TargetUser)
             .FirstOrDefaultAsync(r => r.Id == reportId, cancellationToken);
 
         if (report == null)
@@ -95,6 +100,8 @@ public class AdminService : IAdminService
             Id = report.Id,
             ArtworkId = report.ArtworkId,
             ArtworkTitle = report.Artwork?.Title ?? "",
+            TargetUserId = report.TargetUserId,
+            TargetUsername = report.TargetUser?.Username ?? "",
             ReportedById = report.ReportedById,
             ReportedByUsername = report.ReportedBy?.Username ?? "",
             ReportType = report.ReportType,

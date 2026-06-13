@@ -70,7 +70,17 @@ public class GroupController : ControllerBase
     [ProducesResponseType(typeof(GenericResult<PagedResult<GroupResponse>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAllGroups([FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
     {
-        var result = await _groupService.GetAllGroupsAsync(page, pageSize, cancellationToken);
+        int? userId = null;
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userIdClaim != null)
+            {
+                userId = int.Parse(userIdClaim);
+            }
+        }
+
+        var result = await _groupService.GetAllGroupsAsync(page, pageSize, userId, cancellationToken);
         return Ok(result);
     }
 

@@ -102,12 +102,21 @@ public class EventService : IEventService
         return GenericResult<EventResponse>.Success(response);
     }
 
-    public async Task<GenericResult<PagedResult<EventResponse>>> GetUpcomingEventsAsync(int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<GenericResult<PagedResult<EventResponse>>> GetUpcomingEventsAsync(int page, int pageSize, int? currentUserId = null, CancellationToken cancellationToken = default)
     {
         var events = await _eventRepository.GetUpcomingEventsAsync(page, pageSize, cancellationToken);
         var count = await _eventRepository.GetUpcomingEventsCountAsync(cancellationToken);
 
         var responses = _mapper.Map<IReadOnlyCollection<EventResponse>>(events);
+        
+        if (currentUserId.HasValue)
+        {
+            foreach (var response in responses)
+            {
+                response.IsRsvped = await _eventRepository.HasUserRsvpedAsync(response.Id, currentUserId.Value, cancellationToken);
+            }
+        }
+
         var pagedResult = new PagedResult<EventResponse>
         {
             Items = responses,
