@@ -9,12 +9,12 @@ The backend service for the Muse Space platform. This RESTful API serves as the 
 - **Framework**: .NET 9 (Core Web API)
 - **Language**: C# 12
 - **Database**: PostgreSQL (Relational Data Storage)
-- **ORM**: Entity Framework Core 8 (Code-First Migrations)
+- **ORM**: Entity Framework Core 9
 - **Authentication & Security**: ASP.NET Core Identity & JWT (JSON Web Tokens) with Role-Based Access Control (RBAC).
 - **Real-time Communication**: SignalR (WebSockets for live notifications).
 - **Media Storage**: Cloudinary SDK (Image/Video uploads and transformations).
 - **Mapping**: AutoMapper (DTO to Entity conversions).
-- **Documentation**: Swashbuckle / Swagger (OpenAPI 3.0).
+- **Documentation**: [Swashbuckle / Swagger (OpenAPI 3.0).](https://musespace-api-cggvbpftf0cmajh9.southeastasia-01.azurewebsites.net/swagger/index.html)
 
 ---
 
