@@ -93,6 +93,22 @@ public class AdminService : IAdminService
         report.ReviewedByAdminId = adminId;
         report.UpdatedAtUtc = DateTime.UtcNow;
 
+        if (request.Status == "Approved")
+        {
+            if (report.ArtworkId.HasValue && report.Artwork != null)
+            {
+                report.Artwork.IsSoftDeleted = true;
+            }
+            else if (report.TargetUserId.HasValue)
+            {
+                var targetUser = await _dbContext.Users.FindAsync(new object[] { report.TargetUserId.Value }, cancellationToken);
+                if (targetUser != null)
+                {
+                    targetUser.IsBanned = true;
+                }
+            }
+        }
+
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return GenericResult<ReportResponse>.Success(new ReportResponse
