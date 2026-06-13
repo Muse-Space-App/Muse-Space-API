@@ -31,20 +31,18 @@ public class EventRepository : Repository<Event>, IEventRepository
     public async Task AddRsvpAsync(EventRsvp rsvp, CancellationToken cancellationToken = default)
     {
         await _context.EventRsvps.AddAsync(rsvp, cancellationToken);
-        await _context.Database.ExecuteSqlRawAsync(
-            "UPDATE \"Events\" SET \"RsvpCount\" = \"RsvpCount\" + 1 WHERE \"Id\" = {0}",
-            new object[] { rsvp.EventId },
-            cancellationToken);
+        await _context.Events
+            .Where(e => e.Id == rsvp.EventId)
+            .ExecuteUpdateAsync(s => s.SetProperty(e => e.RsvpCount, e => e.RsvpCount + 1), cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task RemoveRsvpAsync(EventRsvp rsvp, CancellationToken cancellationToken = default)
     {
         _context.EventRsvps.Remove(rsvp);
-        await _context.Database.ExecuteSqlRawAsync(
-            "UPDATE \"Events\" SET \"RsvpCount\" = CASE WHEN \"RsvpCount\" > 0 THEN \"RsvpCount\" - 1 ELSE 0 END WHERE \"Id\" = {0}",
-            new object[] { rsvp.EventId },
-            cancellationToken);
+        await _context.Events
+            .Where(e => e.Id == rsvp.EventId)
+            .ExecuteUpdateAsync(s => s.SetProperty(e => e.RsvpCount, e => e.RsvpCount > 0 ? e.RsvpCount - 1 : 0), cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
     }
 

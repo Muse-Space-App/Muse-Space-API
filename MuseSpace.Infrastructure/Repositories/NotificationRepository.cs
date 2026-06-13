@@ -35,17 +35,15 @@ public class NotificationRepository : Repository<Notification>, INotificationRep
 
     public async Task MarkAsReadAsync(int notificationId, CancellationToken cancellationToken = default)
     {
-        await _context.Database.ExecuteSqlRawAsync(
-            "UPDATE Notifications SET IsRead = true WHERE Id = {0}",
-            new object[] { notificationId },
-            cancellationToken);
+        await _context.Notifications
+            .Where(n => n.Id == notificationId)
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true), cancellationToken);
     }
 
     public async Task MarkAllAsReadAsync(int userId, CancellationToken cancellationToken = default)
     {
-        await _context.Database.ExecuteSqlRawAsync(
-            "UPDATE Notifications SET IsRead = true WHERE UserId = {0} AND IsRead = false",
-            new object[] { userId },
-            cancellationToken);
+        await _context.Notifications
+            .Where(n => n.UserId == userId && !n.IsRead)
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true), cancellationToken);
     }
 }

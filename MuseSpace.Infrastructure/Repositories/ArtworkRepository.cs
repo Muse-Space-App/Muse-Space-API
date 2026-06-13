@@ -185,36 +185,36 @@ public class ArtworkRepository : Repository<Artwork>, IArtworkRepository
 
     public async Task IncrementViewCountAsync(int artworkId, CancellationToken cancellationToken = default)
     {
-        await _dbContext.Database.ExecuteSqlRawAsync(
-            "UPDATE \"Artwork\" SET \"ViewCount\" = \"ViewCount\" + 1 WHERE \"Id\" = {0}",
-            artworkId);
+        await _dbContext.Set<Artwork>()
+            .Where(a => a.Id == artworkId)
+            .ExecuteUpdateAsync(s => s.SetProperty(a => a.ViewCount, a => a.ViewCount + 1), cancellationToken);
     }
 
     public async Task IncrementLikeCountAsync(int artworkId, CancellationToken cancellationToken = default)
     {
-        await _dbContext.Database.ExecuteSqlRawAsync(
-            "UPDATE \"Artwork\" SET \"LikeCount\" = \"LikeCount\" + 1 WHERE \"Id\" = {0}",
-            artworkId);
+        await _dbContext.Set<Artwork>()
+            .Where(a => a.Id == artworkId)
+            .ExecuteUpdateAsync(s => s.SetProperty(a => a.LikeCount, a => a.LikeCount + 1), cancellationToken);
     }
 
     public async Task DecrementLikeCountAsync(int artworkId, CancellationToken cancellationToken = default)
     {
-        await _dbContext.Database.ExecuteSqlRawAsync(
-            "UPDATE \"Artwork\" SET \"LikeCount\" = GREATEST(\"LikeCount\" - 1, 0) WHERE \"Id\" = {0}",
-            artworkId);
+        await _dbContext.Set<Artwork>()
+            .Where(a => a.Id == artworkId)
+            .ExecuteUpdateAsync(s => s.SetProperty(a => a.LikeCount, a => a.LikeCount > 0 ? a.LikeCount - 1 : 0), cancellationToken);
     }
 
     public async Task IncrementCommentCountAsync(int artworkId, CancellationToken cancellationToken = default)
     {
-        await _dbContext.Database.ExecuteSqlRawAsync(
-            "UPDATE \"Artwork\" SET \"CommentCount\" = \"CommentCount\" + 1 WHERE \"Id\" = {0}",
-            artworkId);
+        await _dbContext.Set<Artwork>()
+            .Where(a => a.Id == artworkId)
+            .ExecuteUpdateAsync(s => s.SetProperty(a => a.CommentCount, a => a.CommentCount + 1), cancellationToken);
     }
 
     public async Task DecrementCommentCountAsync(int artworkId, CancellationToken cancellationToken = default)
     {
-        await _dbContext.Database.ExecuteSqlRawAsync(
-            "UPDATE \"Artwork\" SET \"CommentCount\" = GREATEST(\"CommentCount\" - 1, 0) WHERE \"Id\" = {0}",
-            artworkId);
+        await _dbContext.Set<Artwork>()
+            .Where(a => a.Id == artworkId)
+            .ExecuteUpdateAsync(s => s.SetProperty(a => a.CommentCount, a => a.CommentCount > 0 ? a.CommentCount - 1 : 0), cancellationToken);
     }
 }

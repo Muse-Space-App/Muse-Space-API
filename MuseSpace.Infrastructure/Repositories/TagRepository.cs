@@ -92,9 +92,9 @@ public class TagRepository : Repository<Tag>, ITagRepository
 
     public async Task IncrementUsageCountAsync(int tagId, CancellationToken cancellationToken = default)
     {
-        await _dbContext.Database.ExecuteSqlRawAsync(
-            "UPDATE \"Tags\" SET \"UsageCount\" = \"UsageCount\" + 1 WHERE \"Id\" = {0}",
-            tagId);
+        await _dbContext.Tags
+            .Where(t => t.Id == tagId)
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.UsageCount, t => t.UsageCount + 1), cancellationToken);
     }
 
     private static string GenerateSlug(string text)
