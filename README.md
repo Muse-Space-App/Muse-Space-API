@@ -6,7 +6,7 @@ The backend service for the Muse Space platform. This RESTful API serves as the 
 
 ## Tech Stack & Tooling
 
-- **Framework**: .NET 8 (Core Web API)
+- **Framework**: .NET 9 (Core Web API)
 - **Language**: C# 12
 - **Database**: PostgreSQL (Relational Data Storage)
 - **ORM**: Entity Framework Core 8 (Code-First Migrations)
@@ -53,7 +53,7 @@ The repository is structured using a strict **N-Tier Architecture** to ensure hi
 ## Getting Started
 
 ### Prerequisites
-1. **.NET 8 SDK** installed on your machine.
+1. **.NET 9 SDK** installed on your machine.
 2. **PostgreSQL** server running locally or accessible via network.
 3. A **Cloudinary** account (for media uploads).
 
