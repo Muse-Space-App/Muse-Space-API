@@ -93,6 +93,8 @@ public class GroupRepository : Repository<Group>, IGroupRepository
             .Where(gp => gp.GroupId == groupId)
             .Include(gp => gp.Author)
                 .ThenInclude(a => a!.UserProfile)
+            .Include(gp => gp.Likes)
+            .Include(gp => gp.Comments.Where(c => !c.IsSoftDeleted))
             .OrderByDescending(gp => gp.CreatedAtUtc)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -121,6 +123,61 @@ public class GroupRepository : Repository<Group>, IGroupRepository
     public async Task DeleteGroupPostAsync(GroupPost post, CancellationToken cancellationToken = default)
     {
         _context.GroupPosts.Remove(post);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<GroupPostLike?> GetPostLikeAsync(int userId, int postId, CancellationToken cancellationToken = default)
+    {
+        return await _context.GroupPostLikes
+            .FirstOrDefaultAsync(l => l.UserId == userId && l.GroupPostId == postId, cancellationToken);
+    }
+
+    public async Task AddPostLikeAsync(GroupPostLike like, CancellationToken cancellationToken = default)
+    {
+        await _context.GroupPostLikes.AddAsync(like, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RemovePostLikeAsync(GroupPostLike like, CancellationToken cancellationToken = default)
+    {
+        _context.GroupPostLikes.Remove(like);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<int> GetPostLikeCountAsync(int postId, CancellationToken cancellationToken = default)
+    {
+        return await _context.GroupPostLikes
+            .CountAsync(l => l.GroupPostId == postId, cancellationToken);
+    }
+
+    public async Task<IReadOnlyCollection<GroupPostComment>> GetPostCommentsAsync(int postId, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        return await _context.GroupPostComments
+            .Where(c => c.GroupPostId == postId && !c.IsSoftDeleted)
+            .Include(c => c.User)
+                .ThenInclude(u => u!.UserProfile)
+            .OrderBy(c => c.CreatedAtUtc)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task AddPostCommentAsync(GroupPostComment comment, CancellationToken cancellationToken = default)
+    {
+        await _context.GroupPostComments.AddAsync(comment, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<GroupPostComment?> GetPostCommentByIdAsync(int commentId, CancellationToken cancellationToken = default)
+    {
+        return await _context.GroupPostComments
+            .FirstOrDefaultAsync(c => c.Id == commentId && !c.IsSoftDeleted, cancellationToken);
+    }
+
+    public async Task DeletePostCommentAsync(GroupPostComment comment, CancellationToken cancellationToken = default)
+    {
+        comment.IsSoftDeleted = true;
+        _context.GroupPostComments.Update(comment);
         await _context.SaveChangesAsync(cancellationToken);
     }
 }

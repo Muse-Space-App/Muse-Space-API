@@ -51,7 +51,9 @@ public class CloudinaryMediaUploadService : IMediaUploadService
             Url = uploadResult.SecureUrl.ToString(),
             ThumbnailUrl = thumbnailUrl,
             PublicId = uploadResult.PublicId,
-            MediaType = "Image"
+            MediaType = "Image",
+            Width = uploadResult.Width,
+            Height = uploadResult.Height
         };
     }
 
@@ -84,7 +86,9 @@ public class CloudinaryMediaUploadService : IMediaUploadService
             Url = uploadResult.SecureUrl.ToString(),
             ThumbnailUrl = thumbnailUrl,
             PublicId = uploadResult.PublicId,
-            MediaType = "Video"
+            MediaType = "Video",
+            Width = uploadResult.Width,
+            Height = uploadResult.Height
         };
     }
 

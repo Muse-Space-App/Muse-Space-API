@@ -10,4 +10,7 @@ public sealed class GroupPost : BaseEntity
 
     public Group? Group { get; set; }
     public User? Author { get; set; }
+
+    public ICollection<GroupPostLike> Likes { get; set; } = new List<GroupPostLike>();
+    public ICollection<GroupPostComment> Comments { get; set; } = new List<GroupPostComment>();
 }

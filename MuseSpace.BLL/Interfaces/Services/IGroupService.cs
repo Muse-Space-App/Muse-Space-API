@@ -16,6 +16,10 @@ public interface IGroupService
     Task<GenericResult<PagedResult<GroupMemberResponse>>> GetGroupMembersAsync(int groupId, int page, int pageSize, CancellationToken cancellationToken = default);
 
     Task<GenericResult<GroupPostResponse>> CreateGroupPostAsync(int groupId, int userId, CreateGroupPostRequest request, CancellationToken cancellationToken = default);
-    Task<GenericResult<PagedResult<GroupPostResponse>>> GetGroupPostsAsync(int groupId, int page, int pageSize, CancellationToken cancellationToken = default);
+    Task<GenericResult<PagedResult<GroupPostResponse>>> GetGroupPostsAsync(int groupId, int page, int pageSize, int? currentUserId = null, CancellationToken cancellationToken = default);
     Task<GenericResult<bool>> DeleteGroupPostAsync(int postId, int userId, CancellationToken cancellationToken = default);
+
+    Task<GenericResult<bool>> TogglePostLikeAsync(int userId, int postId, CancellationToken cancellationToken = default);
+    Task<GenericResult<GroupPostCommentResponse>> AddPostCommentAsync(int userId, int postId, CreateGroupPostCommentRequest request, CancellationToken cancellationToken = default);
+    Task<GenericResult<PagedResult<GroupPostCommentResponse>>> GetPostCommentsAsync(int postId, int page, int pageSize, CancellationToken cancellationToken = default);
 }

@@ -49,12 +49,14 @@ public class SocialService : ISocialService
             var follow = new Follow { FollowerId = followerId, FollowingId = followingId };
             await _socialRepository.AddFollowAsync(follow, cancellationToken);
 
+            var follower = await _userRepository.GetByIdAsync(followerId, cancellationToken);
+
             // Trigger Notification
             await _notificationService.CreateNotificationAsync(
                 followingId,
-                "Follow",
-                "Someone started following you.",
-                $"/profile", // We can point to the follower's profile if we had their username, but this suffices.
+                "NewFollower",
+                $"{follower?.Username ?? "Someone"} started following you.",
+                follower != null ? $"/profile/{follower.Username}" : "/profile",
                 followerId,
                 null,
                 cancellationToken

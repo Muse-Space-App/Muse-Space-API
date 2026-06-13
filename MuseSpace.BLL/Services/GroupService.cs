@@ -215,11 +215,25 @@ public class GroupService : IGroupService
         return GenericResult<GroupPostResponse>.Success(response, "Post created successfully");
     }
 
-    public async Task<GenericResult<PagedResult<GroupPostResponse>>> GetGroupPostsAsync(int groupId, int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<GenericResult<PagedResult<GroupPostResponse>>> GetGroupPostsAsync(int groupId, int page, int pageSize, int? currentUserId = null, CancellationToken cancellationToken = default)
     {
         var posts = await _groupRepository.GetGroupPostsAsync(groupId, page, pageSize, cancellationToken);
 
-        var responses = _mapper.Map<IReadOnlyCollection<GroupPostResponse>>(posts);
+        var responses = posts.Select(post => new GroupPostResponse
+        {
+            Id = post.Id,
+            GroupId = post.GroupId,
+            AuthorId = post.AuthorId,
+            AuthorUsername = post.Author?.Username ?? string.Empty,
+            AuthorAvatarUrl = post.Author?.UserProfile?.AvatarUrl ?? string.Empty,
+            Content = post.Content,
+            IsEdited = post.IsEdited,
+            CreatedAtUtc = post.CreatedAtUtc,
+            EditedAtUtc = post.EditedAtUtc,
+            LikeCount = post.Likes.Count,
+            CommentCount = post.Comments.Count,
+            IsLiked = currentUserId.HasValue && post.Likes.Any(l => l.UserId == currentUserId.Value)
+        }).ToList();
 
         var pagedResult = new PagedResult<GroupPostResponse>
         {
@@ -248,5 +262,105 @@ public class GroupService : IGroupService
 
         await _groupRepository.DeleteGroupPostAsync(post, cancellationToken);
         return GenericResult<bool>.Success(true, "Post deleted successfully");
+    }
+
+    public async Task<GenericResult<bool>> TogglePostLikeAsync(int userId, int postId, CancellationToken cancellationToken = default)
+    {
+        var post = await _groupRepository.GetGroupPostByIdAsync(postId, cancellationToken);
+        if (post == null)
+        {
+            return GenericResult<bool>.Failure("Post not found", ErrorType.NotFound);
+        }
+
+        var like = await _groupRepository.GetPostLikeAsync(userId, postId, cancellationToken);
+        if (like != null)
+        {
+            await _groupRepository.RemovePostLikeAsync(like, cancellationToken);
+            return GenericResult<bool>.Success(false, "Post unliked");
+        }
+        else
+        {
+            var newLike = new GroupPostLike
+            {
+                UserId = userId,
+                GroupPostId = postId,
+                CreatedAtUtc = DateTime.UtcNow
+            };
+            await _groupRepository.AddPostLikeAsync(newLike, cancellationToken);
+            return GenericResult<bool>.Success(true, "Post liked");
+        }
+    }
+
+    public async Task<GenericResult<GroupPostCommentResponse>> AddPostCommentAsync(int userId, int postId, CreateGroupPostCommentRequest request, CancellationToken cancellationToken = default)
+    {
+        var post = await _groupRepository.GetGroupPostByIdAsync(postId, cancellationToken);
+        if (post == null)
+        {
+            return GenericResult<GroupPostCommentResponse>.Failure("Post not found", ErrorType.NotFound);
+        }
+
+        var isMember = await _groupRepository.IsUserInGroupAsync(post.GroupId, userId, cancellationToken);
+        if (!isMember)
+        {
+            return GenericResult<GroupPostCommentResponse>.Failure("Only members can comment on group posts", ErrorType.Unauthorized);
+        }
+
+        var comment = new GroupPostComment
+        {
+            GroupPostId = postId,
+            UserId = userId,
+            Content = request.Content,
+            CreatedAtUtc = DateTime.UtcNow
+        };
+
+        await _groupRepository.AddPostCommentAsync(comment, cancellationToken);
+
+        // Fetch back to get user info
+        var savedComment = await _groupRepository.GetPostCommentByIdAsync(comment.Id, cancellationToken);
+        
+        var response = new GroupPostCommentResponse
+        {
+            Id = comment.Id,
+            Content = comment.Content,
+            CreatedAtUtc = comment.CreatedAtUtc
+        };
+
+        if (savedComment?.User != null)
+        {
+            response.AuthorUsername = savedComment.User.Username;
+            response.AuthorAvatarUrl = savedComment.User.UserProfile?.AvatarUrl ?? string.Empty;
+        }
+
+        return GenericResult<GroupPostCommentResponse>.Success(response, "Comment added successfully");
+    }
+
+    public async Task<GenericResult<PagedResult<GroupPostCommentResponse>>> GetPostCommentsAsync(int postId, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var post = await _groupRepository.GetGroupPostByIdAsync(postId, cancellationToken);
+        if (post == null)
+        {
+            return GenericResult<PagedResult<GroupPostCommentResponse>>.Failure("Post not found", ErrorType.NotFound);
+        }
+
+        var comments = await _groupRepository.GetPostCommentsAsync(postId, page, pageSize, cancellationToken);
+
+        var responses = comments.Select(c => new GroupPostCommentResponse
+        {
+            Id = c.Id,
+            AuthorUsername = c.User?.Username ?? string.Empty,
+            AuthorAvatarUrl = c.User?.UserProfile?.AvatarUrl ?? string.Empty,
+            Content = c.Content,
+            CreatedAtUtc = c.CreatedAtUtc
+        }).ToList();
+
+        var pagedResult = new PagedResult<GroupPostCommentResponse>
+        {
+            Items = responses,
+            PageNumber = page,
+            PageSize = pageSize,
+            TotalCount = comments.Count == pageSize ? page * pageSize + 1 : (page - 1) * pageSize + comments.Count
+        };
+
+        return GenericResult<PagedResult<GroupPostCommentResponse>>.Success(pagedResult);
     }
 }

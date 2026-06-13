@@ -37,4 +37,7 @@ public sealed class User : BaseEntity
     public ICollection<Commission> RequestedCommissions { get; set; } = new List<Commission>();
     public ICollection<Commission> ReceivedCommissions { get; set; } = new List<Commission>();
     public ICollection<CommissionMessage> CommissionMessages { get; set; } = new List<CommissionMessage>();
+
+    public ICollection<GroupPostLike> GroupPostLikes { get; set; } = new List<GroupPostLike>();
+    public ICollection<GroupPostComment> GroupPostComments { get; set; } = new List<GroupPostComment>();
 }

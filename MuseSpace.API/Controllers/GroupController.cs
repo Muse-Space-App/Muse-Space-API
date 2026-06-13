@@ -176,7 +176,9 @@ public class GroupController : ControllerBase
     [ProducesResponseType(typeof(GenericResult<PagedResult<GroupPostResponse>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPosts(int groupId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
     {
-        var result = await _groupService.GetGroupPostsAsync(groupId, page, pageSize, cancellationToken);
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        int? currentUserId = userIdClaim != null ? int.Parse(userIdClaim) : null;
+        var result = await _groupService.GetGroupPostsAsync(groupId, page, pageSize, currentUserId, cancellationToken);
         return Ok(result);
     }
 
@@ -198,6 +200,61 @@ public class GroupController : ControllerBase
             if (result.ErrorType == ErrorType.NotFound) return NotFound();
             return BadRequest(result);
         }
+        return Ok(result);
+    }
+
+    /// <summary>Toggles a like on a group post.</summary>
+    /// <param name="groupId">The group identifier.</param>
+    /// <param name="postId">The post identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A value indicating whether the post is now liked.</returns>
+    [HttpPost("{groupId}/posts/{postId}/like")]
+    [Authorize]
+    [ProducesResponseType(typeof(GenericResult<bool>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ToggleLike(int groupId, int postId, CancellationToken cancellationToken)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await _groupService.TogglePostLikeAsync(userId, postId, cancellationToken);
+        if (!result.IsSuccess) return BadRequest(result);
+        return Ok(result);
+    }
+
+    /// <summary>Adds a comment to a group post.</summary>
+    /// <param name="groupId">The group identifier.</param>
+    /// <param name="postId">The post identifier.</param>
+    /// <param name="request">The comment creation request.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The created comment.</returns>
+    [HttpPost("{groupId}/posts/{postId}/comments")]
+    [Authorize]
+    [ProducesResponseType(typeof(GenericResult<GroupPostCommentResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> AddComment(int groupId, int postId, [FromBody] CreateGroupPostCommentRequest request, CancellationToken cancellationToken)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await _groupService.AddPostCommentAsync(userId, postId, request, cancellationToken);
+        if (!result.IsSuccess)
+        {
+            if (result.ErrorType == ErrorType.Unauthorized) return Forbid();
+            if (result.ErrorType == ErrorType.NotFound) return NotFound();
+            return BadRequest(result);
+        }
+        return Ok(result);
+    }
+
+    /// <summary>Gets comments for a group post.</summary>
+    /// <param name="groupId">The group identifier.</param>
+    /// <param name="postId">The post identifier.</param>
+    /// <param name="page">The page number.</param>
+    /// <param name="pageSize">The number of items per page.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A paged list of comments.</returns>
+    [HttpGet("{groupId}/posts/{postId}/comments")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(GenericResult<PagedResult<GroupPostCommentResponse>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetComments(int groupId, int postId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
+    {
+        var result = await _groupService.GetPostCommentsAsync(postId, page, pageSize, cancellationToken);
+        if (!result.IsSuccess) return NotFound(result);
         return Ok(result);
     }
 }

@@ -74,4 +74,7 @@ public class GroupPostResponse
     public bool IsEdited { get; set; }
     public DateTime CreatedAtUtc { get; set; }
     public DateTime? EditedAtUtc { get; set; }
+    public int LikeCount { get; set; }
+    public int CommentCount { get; set; }
+    public bool IsLiked { get; set; }
 }

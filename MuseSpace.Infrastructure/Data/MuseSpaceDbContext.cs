@@ -31,6 +31,8 @@ public sealed class MuseSpaceDbContext : DbContext
     public DbSet<Notification> Notifications { get; set; } = null!;
     public DbSet<Commission> Commissions { get; set; } = null!;
     public DbSet<CommissionMessage> CommissionMessages { get; set; } = null!;
+    public DbSet<GroupPostLike> GroupPostLikes { get; set; } = null!;
+    public DbSet<GroupPostComment> GroupPostComments { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -68,6 +70,8 @@ public sealed class MuseSpaceDbContext : DbContext
             entity.HasMany(e => e.RequestedCommissions).WithOne(c => c.Requester).HasForeignKey(c => c.RequesterId).OnDelete(DeleteBehavior.Restrict);
             entity.HasMany(e => e.ReceivedCommissions).WithOne(c => c.Artist).HasForeignKey(c => c.ArtistId).OnDelete(DeleteBehavior.Restrict);
             entity.HasMany(e => e.CommissionMessages).WithOne(cm => cm.Sender).HasForeignKey(cm => cm.SenderId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasMany(e => e.GroupPostLikes).WithOne(l => l.User).HasForeignKey(l => l.UserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(e => e.GroupPostComments).WithOne(c => c.User).HasForeignKey(c => c.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Otp>(entity =>
@@ -204,6 +208,26 @@ public sealed class MuseSpaceDbContext : DbContext
             entity.Property(gp => gp.Content).IsRequired().HasMaxLength(5000);
             entity.HasOne(gp => gp.Group).WithMany(g => g.Posts).HasForeignKey(gp => gp.GroupId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(gp => gp.Author).WithMany(u => u.GroupPosts).HasForeignKey(gp => gp.AuthorId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<GroupPostLike>(entity =>
+        {
+            entity.HasKey(l => new { l.UserId, l.GroupPostId });
+            entity.HasIndex(l => l.CreatedAtUtc);
+            entity.HasOne(l => l.User).WithMany(u => u.GroupPostLikes).HasForeignKey(l => l.UserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(l => l.GroupPost).WithMany(gp => gp.Likes).HasForeignKey(l => l.GroupPostId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<GroupPostComment>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.HasIndex(c => c.GroupPostId);
+            entity.HasIndex(c => c.UserId);
+            entity.HasIndex(c => c.CreatedAtUtc);
+            entity.HasIndex(c => c.IsSoftDeleted);
+            entity.Property(c => c.Content).IsRequired().HasMaxLength(5000);
+            entity.HasOne(c => c.GroupPost).WithMany(gp => gp.Comments).HasForeignKey(c => c.GroupPostId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(c => c.User).WithMany(u => u.GroupPostComments).HasForeignKey(c => c.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Event>(entity =>

@@ -142,7 +142,7 @@ public class SocialController : ControllerBase
         }
         catch (Exception ex)
         {
-            return BadRequest(GenericResult<string>.Failure(ex.Message, ErrorType.InternalError));
+            return BadRequest(GenericResult<string>.Failure(ex.Message, ErrorType.SystemError));
         }
     }
 }

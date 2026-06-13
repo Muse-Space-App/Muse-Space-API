@@ -6,6 +6,8 @@ public class MediaUploadResult
     public string ThumbnailUrl { get; set; } = string.Empty;
     public string PublicId { get; set; } = string.Empty;
     public string MediaType { get; set; } = string.Empty;
+    public int? Width { get; set; }
+    public int? Height { get; set; }
 }
 
 public interface IMediaUploadService

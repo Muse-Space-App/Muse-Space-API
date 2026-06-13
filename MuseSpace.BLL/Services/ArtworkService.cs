@@ -71,6 +71,8 @@ public class ArtworkService : IArtworkService
             ContentUrl = uploadResult.Url,
             ThumbnailUrl = uploadResult.ThumbnailUrl,
             MediaType = uploadResult.MediaType,
+            Width = uploadResult.Width,
+            Height = uploadResult.Height,
             CreatedAtUtc = DateTime.UtcNow,
             CreatedBy = user.Email
         };
