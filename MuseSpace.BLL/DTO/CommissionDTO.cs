@@ -40,6 +40,9 @@ public class CommissionResponse
 public class CreateCommissionMessageRequest
 {
     public string Content { get; set; } = string.Empty;
+
+    public string? AttachmentUrl { get; set; }
+    public string? AttachmentType { get; set; }
 }
 
 public class CommissionMessageResponse
@@ -51,6 +54,8 @@ public class CommissionMessageResponse
     public string? SenderAvatarUrl { get; set; }
 
     public string Content { get; set; } = string.Empty;
+    public string? AttachmentUrl { get; set; }
+    public string? AttachmentType { get; set; }
     public bool IsRead { get; set; }
     public DateTime CreatedAtUtc { get; set; }
 }

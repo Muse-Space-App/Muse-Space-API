@@ -169,6 +169,8 @@ public class CommissionService : ICommissionService
             SenderUsername = m.Sender?.Username ?? "Unknown",
             SenderAvatarUrl = m.Sender?.UserProfile?.AvatarUrl,
             Content = m.Content,
+            AttachmentUrl = m.AttachmentUrl,
+            AttachmentType = m.AttachmentType,
             IsRead = m.IsRead,
             CreatedAtUtc = m.CreatedAtUtc
         }).ToList();
@@ -198,6 +200,8 @@ public class CommissionService : ICommissionService
             CommissionId = commissionId,
             SenderId = senderId,
             Content = request.Content,
+            AttachmentUrl = request.AttachmentUrl,
+            AttachmentType = request.AttachmentType,
             IsRead = false,
             CreatedAtUtc = DateTime.UtcNow
         };
@@ -209,11 +213,13 @@ public class CommissionService : ICommissionService
         var response = new CommissionMessageResponse
         {
             Id = message.Id,
-            CommissionId = message.CommissionId,
-            SenderId = message.SenderId,
+            CommissionId = commissionId,
+            SenderId = senderId,
             SenderUsername = sender?.Username ?? "Unknown",
             SenderAvatarUrl = sender?.UserProfile?.AvatarUrl,
             Content = message.Content,
+            AttachmentUrl = message.AttachmentUrl,
+            AttachmentType = message.AttachmentType,
             IsRead = message.IsRead,
             CreatedAtUtc = message.CreatedAtUtc
         };

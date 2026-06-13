@@ -217,6 +217,8 @@ public class GroupService : IGroupService
             GroupId = groupId,
             AuthorId = userId,
             Content = request.Content,
+            AttachmentUrl = request.AttachmentUrl,
+            AttachmentType = request.AttachmentType,
             CreatedAtUtc = DateTime.UtcNow
         };
 

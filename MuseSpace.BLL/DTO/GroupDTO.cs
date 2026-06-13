@@ -56,6 +56,9 @@ public class CreateGroupPostRequest
     [Required]
     [MaxLength(5000)]
     public string Content { get; set; } = string.Empty;
+
+    public string? AttachmentUrl { get; set; }
+    public string? AttachmentType { get; set; }
 }
 
 public class UpdateGroupPostRequest
@@ -73,6 +76,8 @@ public class GroupPostResponse
     public string AuthorUsername { get; set; } = string.Empty;
     public string AuthorAvatarUrl { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
+    public string? AttachmentUrl { get; set; }
+    public string? AttachmentType { get; set; }
     public bool IsEdited { get; set; }
     public DateTime CreatedAtUtc { get; set; }
     public DateTime? EditedAtUtc { get; set; }

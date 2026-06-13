@@ -8,6 +8,9 @@ public sealed class GroupPost : BaseEntity
     public bool IsEdited { get; set; } = false;
     public DateTime? EditedAtUtc { get; set; }
 
+    public string? AttachmentUrl { get; set; }
+    public string? AttachmentType { get; set; }
+
     public Group? Group { get; set; }
     public User? Author { get; set; }
 
