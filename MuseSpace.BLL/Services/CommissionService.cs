@@ -226,10 +226,11 @@ public class CommissionService : ICommissionService
 
         // Notify the other party
         int notifyUserId = commission.RequesterId == senderId ? commission.ArtistId : commission.RequesterId;
+        string sample = request.Content?.Length > 50 ? request.Content.Substring(0, 47) + "..." : request.Content;
         await _notificationService.CreateNotificationAsync(
             userId: notifyUserId,
             type: "CommissionMessage",
-            message: $"New message on commission '{commission.Title}'",
+            message: $"New message on commission '{commission.Title}': {sample}",
             actionUrl: $"/commissions/{commission.Id}",
             relatedUserId: senderId,
             cancellationToken: cancellationToken);
