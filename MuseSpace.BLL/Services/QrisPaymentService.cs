@@ -28,8 +28,8 @@ public class QrisPaymentService : IPaymentService
         if (commission.RequesterId != userId)
             return GenericResult<string>.Failure("You are not the requester for this commission.", ErrorType.Unauthorized);
 
-        if (commission.Status != CommissionStatus.Accepted)
-            return GenericResult<string>.Failure("Commission must be Accepted before payment can be generated.", ErrorType.ValidationFailed);
+        if (commission.Status != CommissionStatus.Accepted && commission.Status != CommissionStatus.PendingVerification)
+            return GenericResult<string>.Failure("Commission must be Accepted or Pending Verification before payment can be generated.", ErrorType.ValidationFailed);
 
         // Generate QR Code URL via free API
         string payload = $"Commission #{commission.Id} - {commission.Title} - Rp{commission.Price}";
