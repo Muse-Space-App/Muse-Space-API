@@ -119,17 +119,23 @@ public class CommissionService : ICommissionService
         if (commission.RequesterId != userId && commission.ArtistId != userId)
             return GenericResult<CommissionResponse>.Failure("Unauthorized", ErrorType.Unauthorized);
 
-        // Simple validation: only artist can accept/reject/complete. Requester can cancel.
+        // Simple validation: only artist can accept/reject/in-progress. Requester can cancel. Both can complete.
         if (request.Status == CommissionStatus.Cancelled && commission.RequesterId != userId)
             return GenericResult<CommissionResponse>.Failure("Only requester can cancel", ErrorType.Forbidden);
 
         if ((request.Status == CommissionStatus.Accepted ||
              request.Status == CommissionStatus.Rejected ||
-             request.Status == CommissionStatus.InProgress ||
-             request.Status == CommissionStatus.Completed) && commission.ArtistId != userId)
+             request.Status == CommissionStatus.InProgress) && commission.ArtistId != userId)
             return GenericResult<CommissionResponse>.Failure("Only artist can perform this action", ErrorType.Forbidden);
 
+        if (request.Status == CommissionStatus.Completed && commission.RequesterId != userId && commission.ArtistId != userId)
+            return GenericResult<CommissionResponse>.Failure("Only requester or artist can complete the commission", ErrorType.Forbidden);
+
         commission.Status = request.Status;
+        if (!string.IsNullOrEmpty(request.ArtworkUrl))
+        {
+            commission.ArtworkUrl = request.ArtworkUrl;
+        }
         if (request.Status == CommissionStatus.Completed)
             commission.CompletedAtUtc = DateTime.UtcNow;
 
@@ -253,6 +259,7 @@ public class CommissionService : ICommissionService
             Description = commission.Description,
             Price = commission.Price,
             Status = commission.Status,
+            ArtworkUrl = commission.ArtworkUrl,
             DeadlineUtc = commission.DeadlineUtc,
             CompletedAtUtc = commission.CompletedAtUtc,
             CreatedAtUtc = commission.CreatedAtUtc

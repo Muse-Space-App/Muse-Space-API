@@ -14,6 +14,7 @@ public class CreateCommissionRequest
 public class UpdateCommissionStatusRequest
 {
     public CommissionStatus Status { get; set; }
+    public string? ArtworkUrl { get; set; }
 }
 
 public class CommissionResponse
@@ -34,6 +35,7 @@ public class CommissionResponse
 
     public DateTime? DeadlineUtc { get; set; }
     public DateTime? CompletedAtUtc { get; set; }
+    public string? ArtworkUrl { get; set; }
     public DateTime CreatedAtUtc { get; set; }
 }
 

@@ -14,6 +14,7 @@ public sealed class Commission : BaseEntity
 
     public DateTime? DeadlineUtc { get; set; }
     public DateTime? CompletedAtUtc { get; set; }
+    public string? ArtworkUrl { get; set; }
 
     public User? Requester { get; set; }
     public User? Artist { get; set; }
