@@ -71,9 +71,8 @@ public class CommissionRepository : Repository<Commission>, ICommissionRepositor
 
     public async Task MarkMessagesAsReadAsync(int commissionId, int userId, CancellationToken cancellationToken = default)
     {
-        await _context.Database.ExecuteSqlRawAsync(
-            "UPDATE CommissionMessages SET IsRead = true WHERE CommissionId = {0} AND SenderId != {1} AND IsRead = false",
-            new object[] { commissionId, userId },
-            cancellationToken);
+        await _context.CommissionMessages
+            .Where(m => m.CommissionId == commissionId && m.SenderId != userId && !m.IsRead)
+            .ExecuteUpdateAsync(s => s.SetProperty(b => b.IsRead, true), cancellationToken);
     }
 }

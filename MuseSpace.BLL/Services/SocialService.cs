@@ -14,13 +14,15 @@ public class SocialService : ISocialService
     private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
     private readonly INotificationService _notificationService;
+    private readonly IArtworkRepository _artworkRepository;
 
-    public SocialService(ISocialRepository socialRepository, IUserRepository userRepository, IMapper mapper, INotificationService notificationService)
+    public SocialService(ISocialRepository socialRepository, IUserRepository userRepository, IMapper mapper, INotificationService notificationService, IArtworkRepository artworkRepository)
     {
         _socialRepository = socialRepository;
         _userRepository = userRepository;
         _mapper = mapper;
         _notificationService = notificationService;
+        _artworkRepository = artworkRepository;
     }
 
     public async Task<GenericResult<bool>> ToggleFollowAsync(int followerId, int followingId, CancellationToken cancellationToken = default)
@@ -42,16 +44,19 @@ public class SocialService : ISocialService
         {
             var follow = new Follow { FollowerId = followerId, FollowingId = followingId };
             await _socialRepository.RemoveFollowAsync(follow, cancellationToken);
-            return GenericResult<bool>.Success(false, "Unfollowed successfully");
+            return GenericResult<bool>.Success(false, $"You have unfollowed {followingUser.Username}");
         }
         else
         {
-            var follow = new Follow { FollowerId = followerId, FollowingId = followingId };
+            var follow = new Follow
+            {
+                FollowerId = followerId,
+                FollowingId = followingId
+            };
             await _socialRepository.AddFollowAsync(follow, cancellationToken);
-
+            
             var follower = await _userRepository.GetByIdAsync(followerId, cancellationToken);
 
-            // Trigger Notification
             await _notificationService.CreateNotificationAsync(
                 followingId,
                 "NewFollower",
@@ -62,7 +67,7 @@ public class SocialService : ISocialService
                 cancellationToken
             );
 
-            return GenericResult<bool>.Success(true, "Followed successfully");
+            return GenericResult<bool>.Success(true, $"You are now following {followingUser.Username}");
         }
     }
 
@@ -164,6 +169,15 @@ public class SocialService : ISocialService
 
     public async Task<GenericResult<bool>> ToggleAcceptingCommissionsAsync(int userId, bool isAccepting, CancellationToken cancellationToken = default)
     {
+        if (isAccepting)
+        {
+            var userArtworks = await _artworkRepository.GetByCreatorIdAsync(userId, 0, 3, cancellationToken);
+            if (userArtworks.Count < 3)
+            {
+                return GenericResult<bool>.Failure("You must upload at least 3 artworks before you can accept commissions.", ErrorType.ValidationFailed);
+            }
+        }
+
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
         if (user == null || user.UserProfile == null)
         {

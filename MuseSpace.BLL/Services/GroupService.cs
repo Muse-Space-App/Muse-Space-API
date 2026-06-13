@@ -27,6 +27,9 @@ public class GroupService : IGroupService
             Description = request.Description,
             CreatorId = userId,
             IsPrivate = request.IsPrivate,
+            AvatarUrl = string.IsNullOrWhiteSpace(request.AvatarUrl) 
+                ? $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(request.Name)}&background=random" 
+                : request.AvatarUrl,
             MemberCount = 0
         };
 

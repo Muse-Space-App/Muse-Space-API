@@ -12,6 +12,8 @@ public class CreateGroupRequest
     public string Description { get; set; } = string.Empty;
 
     public bool IsPrivate { get; set; } = false;
+
+    public string? AvatarUrl { get; set; }
 }
 
 public class UpdateGroupRequest
