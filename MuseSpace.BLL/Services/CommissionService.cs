@@ -131,8 +131,9 @@ public class CommissionService : ICommissionService
         if (request.Status == CommissionStatus.Completed && commission.RequesterId != userId && commission.ArtistId != userId)
             return GenericResult<CommissionResponse>.Failure("Only requester or artist can complete the commission", ErrorType.Forbidden);
 
+        bool isDelivery = !string.IsNullOrEmpty(request.ArtworkUrl);
         commission.Status = request.Status;
-        if (!string.IsNullOrEmpty(request.ArtworkUrl))
+        if (isDelivery)
         {
             commission.ArtworkUrl = request.ArtworkUrl;
         }
@@ -143,11 +144,25 @@ public class CommissionService : ICommissionService
 
         // Notify the other party
         int notifyUserId = commission.RequesterId == userId ? commission.ArtistId : commission.RequesterId;
+        string notificationMessage = $"Commission '{commission.Title}' status updated to {request.Status}";
+        string actionUrl = $"/commissions/{commission.Id}";
+
+        if (isDelivery)
+        {
+            notificationMessage = $"Artist '{commission.Artist?.Username ?? "the artist"}' has delivered the final artwork for '{commission.Title}'!";
+            actionUrl = $"/commissions/delivery/{commission.Id}";
+        }
+        else if (request.Status == CommissionStatus.Completed)
+        {
+            notificationMessage = $"Client '{commission.Requester?.Username ?? "the client"}' has accepted and completed your commission '{commission.Title}'!";
+            actionUrl = $"/commissions/delivery/{commission.Id}";
+        }
+
         await _notificationService.CreateNotificationAsync(
             userId: notifyUserId,
             type: "CommissionStatusUpdate",
-            message: $"Commission '{commission.Title}' status updated to {request.Status}",
-            actionUrl: $"/commissions/{commission.Id}",
+            message: notificationMessage,
+            actionUrl: actionUrl,
             relatedUserId: userId,
             cancellationToken: cancellationToken);
 
