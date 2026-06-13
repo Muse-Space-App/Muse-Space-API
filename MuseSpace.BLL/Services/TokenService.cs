@@ -30,6 +30,7 @@ public sealed class TokenService : ITokenService
         var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured")));
         var creds = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
 
+        var roleName = user.Role?.Name ?? (user.RoleId == 1 ? "Admin" : "Member");
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -37,7 +38,8 @@ public sealed class TokenService : ITokenService
             new(ClaimTypes.Name, user.Username),
             new("FirstName", user.FirstName),
             new("LastName", user.LastName),
-            new("IsEmailVerified", user.IsEmailVerified.ToString())
+            new("IsEmailVerified", user.IsEmailVerified.ToString()),
+            new(ClaimTypes.Role, roleName)
         };
 
         var expirationMinutes = int.Parse(jwtSettings["ExpiresInMinutes"] ?? "60");

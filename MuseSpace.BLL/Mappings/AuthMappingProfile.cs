@@ -16,6 +16,7 @@ public sealed class AuthMappingProfile : Profile
             .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName))
             .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive))
             .ForMember(dest => dest.IsEmailVerified, opt => opt.MapFrom(src => src.IsEmailVerified))
+            .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role != null ? src.Role.Name : (src.RoleId == 1 ? "Admin" : "Member")))
             .ForMember(dest => dest.LastLoginUtc, opt => opt.MapFrom(src => src.LastLoginUtc));
 
         CreateMap<User, UserProfileResponse>()

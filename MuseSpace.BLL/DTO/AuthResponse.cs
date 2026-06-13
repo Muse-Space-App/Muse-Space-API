@@ -39,6 +39,8 @@ public sealed class UserDto
     public bool IsActive { get; set; }
 
     public bool IsEmailVerified { get; set; }
+    
+    public string Role { get; set; } = string.Empty;
 
     public DateTime? LastLoginUtc { get; set; }
 }
