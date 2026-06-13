@@ -229,7 +229,7 @@ public static class SeedData
     }
 
     /// <summary>
-    /// Seeds sample artworks with real Unsplash images (idempotent)
+    /// Seeds sample artworks with real Cloudinary images (idempotent)
     /// </summary>
     public static async Task SeedArtworksAsync(this MuseSpaceDbContext context)
     {
@@ -498,3 +498,4 @@ public static class SeedData
         Console.WriteLine($"Seeded {commissionsToAdd.Count} commissions and {messagesToAdd.Count} messages");
     }
 }
+

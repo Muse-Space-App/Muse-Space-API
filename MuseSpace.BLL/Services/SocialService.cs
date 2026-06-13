@@ -171,10 +171,10 @@ public class SocialService : ISocialService
     {
         if (isAccepting)
         {
-            var userArtworks = await _artworkRepository.GetByCreatorIdAsync(userId, 0, 3, cancellationToken);
-            if (userArtworks.Count < 3)
+            var userArtworks = await _artworkRepository.GetByCreatorIdAsync(userId, 0, 5, cancellationToken);
+            if (userArtworks.Count < 5)
             {
-                return GenericResult<bool>.Failure("You must upload at least 3 artworks before you can accept commissions.", ErrorType.ValidationFailed);
+                return GenericResult<bool>.Failure("You must upload at least 5 artworks before you can accept commissions.", ErrorType.ValidationFailed);
             }
         }
 

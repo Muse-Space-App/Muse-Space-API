@@ -11,15 +11,18 @@ public class InteractionService : IInteractionService
     private readonly IInteractionRepository _interactionRepository;
     private readonly IArtworkRepository _artworkRepository;
     private readonly INotificationService _notificationService;
+    private readonly IUserRepository _userRepository;
 
     public InteractionService(
         IInteractionRepository interactionRepository, 
         IArtworkRepository artworkRepository,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        IUserRepository userRepository)
     {
         _interactionRepository = interactionRepository;
         _artworkRepository = artworkRepository;
         _notificationService = notificationService;
+        _userRepository = userRepository;
     }
 
     public async Task<GenericResult<bool>> ToggleLikeAsync(int artworkId, int userId, CancellationToken cancellationToken = default)
@@ -44,10 +47,11 @@ public class InteractionService : IInteractionService
             // Trigger Notification
             if (artwork.CreatorId != userId) // Don't notify self
             {
+                var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
                 await _notificationService.CreateNotificationAsync(
                     artwork.CreatorId,
                     "Like",
-                    "Someone liked your artwork.",
+                    $"{user?.Username ?? "Someone"} liked your artwork.",
                     $"/artwork/{artworkId}",
                     userId,
                     artworkId,

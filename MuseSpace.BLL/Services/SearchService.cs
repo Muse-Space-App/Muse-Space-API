@@ -30,7 +30,7 @@ public class SearchService : ISearchService
         _dbContext = dbContext;
     }
 
-    public async Task<GenericResult<SearchResponse>> SearchAsync(string? query, int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<GenericResult<SearchResponse>> SearchAsync(string? query, string? type, int page, int pageSize, CancellationToken cancellationToken = default)
     {
         if (query == null)
         {
@@ -38,17 +38,37 @@ public class SearchService : ISearchService
         }
 
         int skip = (page - 1) * pageSize;
+        var response = new SearchResponse();
 
-        var artworks = await _artworkRepository.SearchAsync(query, skip, pageSize, cancellationToken);
-        var users = await _userRepository.SearchAsync(query, skip, pageSize, cancellationToken);
-        var tags = await _tagRepository.SearchAsync(query, skip, pageSize, cancellationToken);
-
-        var response = new SearchResponse
+        if (string.IsNullOrEmpty(type) || type.Equals("artwork", StringComparison.OrdinalIgnoreCase))
         {
-            Artworks = _mapper.Map<IReadOnlyCollection<ArtworkResponse>>(artworks),
-            Users = _mapper.Map<IReadOnlyCollection<UserProfileResponse>>(users),
-            Tags = _mapper.Map<IReadOnlyCollection<TagResponse>>(tags)
-        };
+            var artworks = await _artworkRepository.SearchAsync(query, skip, pageSize, cancellationToken);
+            response.Artworks = _mapper.Map<IReadOnlyCollection<ArtworkResponse>>(artworks);
+        }
+        else
+        {
+            response.Artworks = new List<ArtworkResponse>();
+        }
+
+        if (string.IsNullOrEmpty(type) || type.Equals("user", StringComparison.OrdinalIgnoreCase))
+        {
+            var users = await _userRepository.SearchAsync(query, skip, pageSize, cancellationToken);
+            response.Users = _mapper.Map<IReadOnlyCollection<UserProfileResponse>>(users);
+        }
+        else
+        {
+            response.Users = new List<UserProfileResponse>();
+        }
+
+        if (string.IsNullOrEmpty(type) || type.Equals("tag", StringComparison.OrdinalIgnoreCase))
+        {
+            var tags = await _tagRepository.SearchAsync(query, skip, pageSize, cancellationToken);
+            response.Tags = _mapper.Map<IReadOnlyCollection<TagResponse>>(tags);
+        }
+        else
+        {
+            response.Tags = new List<TagResponse>();
+        }
 
         return GenericResult<SearchResponse>.Success(response);
     }
@@ -98,3 +118,4 @@ public class SearchService : ISearchService
         });
     }
 }
+

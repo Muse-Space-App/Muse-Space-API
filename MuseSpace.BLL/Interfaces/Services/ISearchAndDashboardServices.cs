@@ -5,7 +5,7 @@ namespace MuseSpace.BLL.Interfaces.Services;
 
 public interface ISearchService
 {
-    Task<GenericResult<SearchResponse>> SearchAsync(string? query, int page, int pageSize, CancellationToken cancellationToken = default);
+    Task<GenericResult<SearchResponse>> SearchAsync(string? query, string? type, int page, int pageSize, CancellationToken cancellationToken = default);
     Task<GenericResult<PagedResult<ArtworkResponse>>> AdvancedSearchAsync(AdvancedSearchRequest request, CancellationToken cancellationToken = default);
 }
 
