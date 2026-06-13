@@ -54,22 +54,22 @@ public class CommentService : ICommentService
 
         await _commentRepository.AddAsync(comment, cancellationToken);
 
+        // Fetch the user to populate the response properly
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+
         // Trigger Notification
         if (artwork.CreatorId != userId) // Don't notify self
         {
             await _notificationService.CreateNotificationAsync(
                 artwork.CreatorId,
                 "Comment",
-                "Someone commented on your artwork.",
+                $"{user?.Username ?? "Someone"} commented on your artwork.",
                 $"/artwork/{artworkId}",
                 userId,
                 artworkId,
                 cancellationToken
             );
         }
-
-        // Fetch the user to populate the response properly
-        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
         
         // Let's use GetByUsernameAsync to get full profile
         if (user != null)
